@@ -4,9 +4,9 @@ plugins {
 }
 
 dependencies {
-    testFixturesImplementation(libs.spring.boot.starter.test)
-    testFixturesImplementation(libs.threeTenExtra)
+    testFixturesImplementation(libs.threeten.extra)
 
-    testImplementation(libs.threeTenExtra)
-    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(libs.assertj.core)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.threeten.extra)
 }

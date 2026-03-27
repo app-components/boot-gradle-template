@@ -8,18 +8,13 @@ javaPlatform {
 }
 
 dependencies {
-    api(platform(libs.spring.boot))
-    api(platform(libs.spring.cloud))
-    api(platform(libs.testContainers))
+    api(platform(libs.boot.bom))
+    api(platform(libs.cloud.bom))
 
     constraints {
-        api(libs.emailAddresss)
-
         // testing dependencies
-        api(libs.greenMail)
-        api(libs.equalsVerifier)
-        api(libs.threeTenExtra)
-
+        api(libs.greenmail)
+        api(libs.equals.verifier)
+        api(libs.threeten.extra)
     }
 }
-

@@ -1,9 +1,9 @@
 plugins {
     id("java.conventions")
-    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.boot)
 }
 
 dependencies {
-    implementation(libs.spring.boot.starter.web)
-    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.boot.starter.webmvc)
+    implementation(libs.boot.starter.actuator)
 }
