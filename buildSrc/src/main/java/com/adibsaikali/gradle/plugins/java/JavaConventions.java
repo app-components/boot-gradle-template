@@ -18,7 +18,7 @@ import java.util.List;
 
 class JavaConventions {
 
-    private final int JAVA_VERSION = 21;
+    private final int JAVA_VERSION = 25;
     private final List<String> compilerArgs = List.of(
             "-parameters",
             "-Werror",
