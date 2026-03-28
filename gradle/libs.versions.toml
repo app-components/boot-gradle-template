@@ -42,6 +42,7 @@ boot-starter-security-oauth2-resource-server = { module = "org.springframework.b
 boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
 boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+boot-docker-compose = { module = "org.springframework.boot:spring-boot-docker-compose" }
 boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 # Spring Cloud starters

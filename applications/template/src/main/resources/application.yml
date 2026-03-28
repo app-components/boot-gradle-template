@@ -1,13 +1,16 @@
 server:
-  port: ${PORT:8080}
+  port: 8080
 
 spring:
+  application:
+    name: template
+
   datasource:
-    url: jdbc:postgresql://localhost:45432/snapcoach?user=postgres&password=password
-    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:15432/template_app
+    username: template_app
+    password: password
 
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: none
-

@@ -39,3 +39,105 @@ Captures architectural decisions and module-specific information.
 **Modular and optimized builds**  
 The modular structure and clear separation of responsibilities make builds faster and more reliable.  
 *Outcome: support for parallel builds, better Gradle build caching, and incremental compilation for quicker feedback loops.*  
+
+## Local Postgres
+
+Stage 1 of local Docker support is a shared PostgreSQL plus pgAdmin setup in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml).
+
+### Why this shape
+
+This repository can eventually host multiple applications and shared components. Rather than giving each application its own PostgreSQL container, the default convention is:
+
+- one shared local PostgreSQL instance
+- one database per application
+- shared local credentials
+- pgAdmin preconfigured to connect without extra setup
+
+That keeps local infrastructure simple while still isolating applications at the database level.
+
+### Commands
+
+Use the `compose` helper from `buildSrc/scripts`:
+
+```bash
+compose up
+compose ps
+compose down
+compose clean
+```
+
+If direnv is active, `.envrc` adds `buildSrc/scripts` to `PATH` so `compose ...` works from anywhere in the repo. Without direnv, run [buildSrc/scripts/compose](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/compose) directly.
+
+### Compose helper
+
+The helper script lives at [buildSrc/scripts/compose](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/compose) and is a thin wrapper around `docker compose` for this repository.
+
+What it does:
+
+- always targets the root [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml)
+- works from any directory in the repo
+- loads `.env` and `.env.local` from the repo root before running Docker Compose
+- provides `compose clean`, which runs `docker compose down -v --remove-orphans`
+
+What it does not do:
+
+- it does not replace Docker Compose concepts or hide service definitions
+- it does not create extra config files outside the repository conventions
+- it does not manage multiple compose files yet
+
+Requirements:
+
+- `docker`
+
+Examples:
+
+```bash
+compose up
+compose logs -f postgres
+compose clean
+```
+
+### Default connection details
+
+- PostgreSQL: `localhost:15432`
+- pgAdmin: `http://localhost:15433`
+- Admin user: `postgres`
+- Password: `password`
+- Template app database: `template_app`
+- Template app database user: `template_app`
+
+### Template app database
+
+The shared PostgreSQL server is started by [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml), and the template app database is created by the inline `postgres_init` script in that same file:
+
+```sql
+CREATE USER template_app WITH PASSWORD 'password';
+
+CREATE DATABASE template_app
+    WITH
+    OWNER = template_app
+    ENCODING = 'UTF8'
+    LC_COLLATE = 'en_US.utf8'
+    LC_CTYPE = 'en_US.utf8'
+    TABLESPACE = pg_default
+    CONNECTION LIMIT = -1;
+```
+
+This is the convention the repo should follow as more applications are added: one Postgres server, many logical databases, and one app-specific user per database.
+
+### Adding another application database
+
+When a new application is added, extend the same inline init block in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml), for example:
+
+```sql
+CREATE USER billing WITH PASSWORD 'password';
+CREATE DATABASE billing
+    WITH
+    OWNER = billing;
+```
+
+The important point is that local isolation happens by database, not by starting a separate PostgreSQL container per application.
+
+### Spring Boot alignment
+
+The sample app includes `spring-boot-docker-compose`, so `bootRun` can start the local Postgres services automatically. The app datasource itself points explicitly at the `template_app` database so the multi-database convention stays visible in application configuration.

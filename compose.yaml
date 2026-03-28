@@ -1,39 +1,148 @@
-version: '3.8'
+# =============================================================================
+# Docker Compose File Conventions
+# =============================================================================
+#
+# This file defines the shared local infrastructure for the repository.
+# Today that means one PostgreSQL server plus pgAdmin. As this template grows
+# into a multi-application repository, additional logical databases should be
+# added to the inline init SQL below rather than by starting more Postgres
+# containers.
+#
+# WHY THIS FILE EXISTS:
+#   - `compose up` gives every developer the same local database environment
+#   - One Postgres server can host multiple application databases locally
+#   - The template app demonstrates the naming convention:
+#       app name = database name = application username
+#
+# LOCAL DATABASE CONVENTION:
+#   - Shared server admin user: postgres
+#   - One logical database per application
+#   - One application user per application database
+#   - Current template app example:
+#       app name: template
+#       database: template
+#       app user: template
+#
+# SERVICE FIELD ORDER (keep this sequence for each service):
+#   1. labels
+#   2. image
+#   3. depends_on
+#   4. command/entrypoint
+#   5. environment
+#   6. configs
+#   7. volumes
+#   8. ports
+#   9. restart
+#
+# ENVIRONMENT VARIABLES:
+#   - All overridable values use ${VAR:-default} syntax
+#   - Override via .env, .env.local, or shell environment
+#   - Current variables:
+#       POSTGRES_IMAGE
+#       PG_PORT
+#       PGADMIN_IMAGE
+#       PGADMIN_PORT
+#
+# QUICK REFERENCE:
+#   Start services:   compose up
+#   Stop services:    compose down
+#   Clean volumes:    compose clean
+#   Show status:      compose ps
+#   View logs:        compose logs
+#
+# IMPORTANT:
+#   - The inline init SQL only runs when the postgres volume is empty
+#   - After changing database creation SQL, run `compose clean` before `compose up`
+#   - Do not set container_name; let Compose manage names
+#
+# =============================================================================
 
 volumes:
-  snapcoach_postgres:
-  snapcoach_pgadmin:
+  postgres:
+  pgadmin:
+
+configs:
+  # Inline SQL keeps the template self-contained while still documenting the
+  # expected multi-application pattern in one place.
+  postgres_init:
+    content: |
+      CREATE USER template_app WITH PASSWORD 'password';
+
+      CREATE DATABASE template_app
+          WITH
+          OWNER = template_app
+          ENCODING = 'UTF8'
+          LC_COLLATE = 'en_US.utf8'
+          LC_CTYPE = 'en_US.utf8'
+          TABLESPACE = pg_default
+          CONNECTION LIMIT = -1;
+
+      -- Add more application-specific users and databases here as this
+      -- repository grows into multiple applications sharing one Postgres
+      -- server for local development.
+  pgadmin_servers:
+    content: |
+      {
+        "Servers": {
+          "1": {
+            "Name": "Shared Local Postgres",
+            "Group": "Servers",
+            "Port": 5432,
+            "Username": "postgres",
+            "Host": "postgres",
+            "SSLMode": "prefer",
+            "MaintenanceDB": "postgres",
+            "PassFile": "/tmp/pgpassfile"
+          }
+        }
+      }
 
 services:
+  # ==========================================================================
+  # Database Services
+  # ==========================================================================
   postgres:
-    image: "postgres:17"
+    image: "${POSTGRES_IMAGE:-postgres:18}"
+
+    # Docker defaults /dev/shm to 64MB. PostgreSQL can hit that limit under
+    # normal local usage, so we raise it to a safer development default.
+    shm_size: 256mb
     environment:
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "password"
       PGDATA: "/data/postgres"
+    configs:
+      - source: postgres_init
+        target: /docker-entrypoint-initdb.d/01-init.sql
     volumes:
-      - snapcoach_postgres:/data/postgres
-      - ./docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+      - postgres:/data/postgres
     ports:
-      - "45432:5432"
+      # Use a non-default host port to reduce conflicts with workstation Postgres.
+      - "${PG_PORT:-15432}:5432"
     restart: unless-stopped
 
   pgadmin:
-    image: "dpage/pgadmin4:latest"
+    image: "${PGADMIN_IMAGE:-dpage/pgadmin4:9.13}"
+    depends_on:
+      - postgres
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: "admin@example.com"
+      PGADMIN_DEFAULT_PASSWORD: "admin"
       PGADMIN_CONFIG_SERVER_MODE: "False"
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+      PGADMIN_REPLACE_SERVERS_ON_STARTUP: "True"
+      PGADMIN_CONFIG_CONSOLE_LOG_LEVEL: 30
+      GUNICORN_ACCESS_LOGFILE: "/var/lib/pgadmin/access.log"
+    configs:
+      - source: pgadmin_servers
+        target: /pgadmin4/servers.json
     volumes:
-      - snapcoach_pgadmin:/var/lib/pgadmin
-      - ./docker_pgadmin_servers.json:/pgadmin4/servers.json
+      - pgadmin:/var/lib/pgadmin
     ports:
-      - "45433:80"
+      - "${PGADMIN_PORT:-15433}:80"
     entrypoint:
       - "/bin/sh"
       - "-c"
+      # Pre-load the Postgres admin password so pgAdmin connects without prompts.
       - "/bin/echo 'postgres:5432:*:postgres:password' > /tmp/pgpassfile && chmod 600 /tmp/pgpassfile && /entrypoint.sh"
     restart: unless-stopped
-
-

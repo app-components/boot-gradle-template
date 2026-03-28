@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Compose Wrapper Script
+# =============================================================================
+#
+# Repository-local wrapper around `docker compose` for the root compose.yaml.
+#
+# WHY THIS SCRIPT EXISTS:
+#   - lets developers run `compose ...` from anywhere in the repo
+#   - always targets the compose.yaml at the repository root
+#   - loads .env and .env.local before invoking Docker Compose
+#
+# EXPECTED REPOSITORY CONVENTIONS:
+#   - root compose file lives at <repo>/compose.yaml
+#   - optional overrides live in <repo>/.env and <repo>/.env.local
+#
+# SUPPORTED COMMANDS:
+#   - up, down, ps, logs
+#   - clean  -> docker compose down -v --remove-orphans
+# =============================================================================
+
+set -Eeuo pipefail
+IFS=$'\n\t'
+
+readonly RED=$'\e[0;31m'
+readonly GREEN=$'\e[0;32m'
+readonly YELLOW=$'\e[0;33m'
+readonly BLUE=$'\e[0;34m'
+readonly BOLD=$'\e[1m'
+readonly NC=$'\e[0m'
+
+log() {
+    local level="$1"
+    shift
+    local color prefix
+
+    case "$level" in
+        error)   color="$RED"    ; prefix="✗ " ;;
+        success) color="$GREEN"  ; prefix="✓ " ;;
+        warn)    color="$YELLOW" ; prefix="! " ;;
+        info)    color="$BLUE"   ; prefix="→ " ;;
+        header)  color="$BLUE"   ; prefix="== " ;;
+        *)       color="$NC"     ; prefix="" ;;
+    esac
+
+    printf "%b%s%s%b\n" "$color" "$prefix" "$*" "$NC"
+}
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        log error "Required command '$1' not found"
+        exit 1
+    fi
+}
+
+get_repo_root() {
+    cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd
+}
+
+load_env() {
+    local repo_root
+    repo_root=$(get_repo_root)
+
+    set -a
+    [[ -f "$repo_root/.env" ]] && source "$repo_root/.env"
+    [[ -f "$repo_root/.env.local" ]] && source "$repo_root/.env.local"
+    set +a
+}
+
+docker_compose() {
+    local repo_root
+    repo_root=$(get_repo_root)
+    (cd "$repo_root" && command docker compose "$@")
+}
+
+show_usage() {
+    cat <<'EOF'
+Usage: compose <command> [options]
+
+Commands:
+  up                    Start all services (detached mode)
+  down                  Stop all services
+  ps                    Show service status
+  logs                  Show service logs (-f for follow)
+  clean                 Stop services and remove volumes
+
+Examples:
+  compose up
+  compose down
+EOF
+}
+
+main() {
+    require_cmd docker
+
+    local repo_root
+    repo_root=$(get_repo_root)
+    [[ -f "$repo_root/compose.yaml" ]] || {
+        log error "compose.yaml not found at repo root"
+        exit 1
+    }
+
+    load_env
+
+    local cmd="${1:-}"
+    [[ -n "$cmd" ]] || {
+        show_usage
+        exit 1
+    }
+    shift
+
+    case "$cmd" in
+        up|down|ps|logs)
+            log header "$(tr '[:lower:]' '[:upper:]' <<< "${cmd:0:1}")${cmd:1}"
+            if [[ "$cmd" == "up" ]]; then
+                if ! docker_compose up -d "$@"; then
+                    log error "Failed to start services"
+                    log info "Check running containers with: docker ps"
+                    log info "Adjust ports in .env or .env.local if needed"
+                    exit 1
+                fi
+                log success "Services started successfully"
+            else
+                docker_compose "$cmd" "$@"
+            fi
+            ;;
+        clean)
+            log header "Cleaning"
+            docker_compose down -v --remove-orphans
+            log success "Cleanup completed"
+            ;;
+        help|--help|-h)
+            show_usage
+            ;;
+        *)
+            log error "Unknown command: $cmd"
+            echo
+            show_usage
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"

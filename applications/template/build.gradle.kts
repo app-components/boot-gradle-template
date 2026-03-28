@@ -9,6 +9,9 @@ dependencies {
     implementation(libs.boot.starter.data.jpa)
     implementation(libs.boot.starter.flyway)
 
+    developmentOnly(libs.boot.devtools)
+    developmentOnly(libs.boot.docker.compose)
+
     runtimeOnly(libs.postgresql)
     runtimeOnly(libs.flyway.database.postgresql)
 
