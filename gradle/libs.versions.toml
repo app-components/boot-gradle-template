@@ -40,6 +40,9 @@ boot-starter-security-oauth2-resource-server = { module = "org.springframework.b
 
 # Spring Boot starters: testing
 boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
+boot-starter-data-jpa-test = { module = "org.springframework.boot:spring-boot-starter-data-jpa-test" }
+boot-starter-webmvc-test = { module = "org.springframework.boot:spring-boot-starter-webmvc-test" }
+boot-testcontainers = { module = "org.springframework.boot:spring-boot-testcontainers" }
 
 # Spring Cloud starters
 cloud-starter-gateway-mvc = { module = "org.springframework.cloud:spring-cloud-starter-gateway-mvc" }
@@ -48,9 +51,11 @@ cloud-starter-gateway-mvc = { module = "org.springframework.cloud:spring-cloud-s
 assertj-core = { module = "org.assertj:assertj-core" }
 flyway-database-postgresql = { module = "org.flywaydb:flyway-database-postgresql" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 postgresql = { module = "org.postgresql:postgresql" }
 rest-assured = { module = "io.rest-assured:rest-assured" }
-testcontainers-postgresql = { module = "org.testcontainers:postgresql" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 
 # Explicit-version libraries
 equals-verifier = { module = "nl.jqno.equalsverifier:equalsverifier", version.ref = "equalsVerifier" }
