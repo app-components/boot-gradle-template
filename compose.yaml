@@ -20,8 +20,8 @@
 #   - One application user per application database
 #   - Current template app example:
 #       app name: template
-#       database: template
-#       app user: template
+#       database: template_app
+#       app user: template_app
 #
 # SERVICE FIELD ORDER (keep this sequence for each service):
 #   1. labels
