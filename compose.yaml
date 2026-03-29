@@ -152,6 +152,14 @@ services:
         target: /docker-entrypoint-initdb.d/01-init.sql
     volumes:
       - postgres:/data/postgres
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - pg_isready -U postgres -d postgres
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     ports:
       # Use a non-default host port to reduce conflicts with workstation Postgres.
       - "${PG_PORT:-15432}:5432"
@@ -160,7 +168,8 @@ services:
   pgadmin:
     image: "${PGADMIN_IMAGE:-dpage/pgadmin4:9.13}"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     environment:
       PGADMIN_DEFAULT_EMAIL: "admin@example.com"
       PGADMIN_DEFAULT_PASSWORD: "admin"
