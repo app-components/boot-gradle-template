@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build template jar
+        run: ./gradlew :applications:template:bootJar
+
+      - name: Resolve release asset
+        id: jar
+        run: |
+          jar_path="$(find applications/template/build/libs -maxdepth 1 -type f -name '*.jar' | head -n 1)"
+
+          if [[ -z "$jar_path" ]]; then
+            echo "No jar found in applications/template/build/libs" >&2
+            exit 1
+          fi
+
+          echo "path=$jar_path" >> "$GITHUB_OUTPUT"
+          echo "name=$(basename "$jar_path")" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            "${{ steps.jar.outputs.path }}#${{ steps.jar.outputs.name }}" \
+            --title "${GITHUB_REF_NAME}" \
+            --generate-notes \
+            --verify-tag
