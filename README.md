@@ -3,15 +3,16 @@
 This repository is a working Spring Boot template with:
 
 - a multi-module Gradle layout
-- one sample application under [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template)
+- one Spring Boot sample application under [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template)
+- one Vite Vue + TypeScript sample application under [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend)
 - one shared local PostgreSQL + pgAdmin setup in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml)
-- a local Docker packaging flow for the template app
+- a local Docker packaging flow for the Spring Boot sample application
 - GitHub Actions workflows for CI and tagged releases
 
 ## Repository Layout
 
 - [applications](/Users/adib/dev/app-components/boot-gradle-template/applications)
-  Deployable applications. The sample app lives in [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template).
+  Deployable applications. The current examples are [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template) and [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend).
 - [components](/Users/adib/dev/app-components/boot-gradle-template/components)
   Reusable shared code.
 - [platform](/Users/adib/dev/app-components/boot-gradle-template/platform)
@@ -31,6 +32,14 @@ Run the template app directly with Spring Boot:
 
 ```bash
 ./gradlew :applications:template:bootRun
+```
+
+Run the frontend SPA locally:
+
+```bash
+cd applications/frontend
+npm install
+npm run dev
 ```
 
 Run the tests:
@@ -117,6 +126,31 @@ It currently demonstrates:
 - Testcontainers
 
 The sample domain is a small quotes application backed by a seeded `quotes` table.
+
+## Frontend Application
+
+The frontend example is in [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend).
+
+It currently demonstrates:
+
+- Vue 3
+- Vite
+- TypeScript
+- the default Vite Vue scaffold
+
+Run it locally:
+
+```bash
+cd applications/frontend
+npm install
+npm run dev
+```
+
+Build it for production:
+
+```bash
+npm run build
+```
 
 ## Configuration Convention
 
