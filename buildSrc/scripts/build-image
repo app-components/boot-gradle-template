@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+if [[ ! -f "$PWD/Dockerfile" ]]; then
+    echo "No Dockerfile found in current directory: $PWD" >&2
+    echo "Run build-image from an application directory that contains a Dockerfile." >&2
+    exit 1
+fi
+
+image_name="${1:-$(basename "$PWD"):latest}"
+
+echo "Building Docker image '$image_name'"
+docker build -t "$image_name" .
+echo "Built Docker image: $image_name"

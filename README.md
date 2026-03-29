@@ -97,6 +97,80 @@ compose logs -f postgres
 compose clean
 ```
 
+## Build Image
+
+Use [buildSrc/scripts/build-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/build-image) from an application directory that contains a `Dockerfile`.
+
+Example for the template app:
+
+```bash
+cd applications/template
+../../gradlew bootJar
+build-image
+```
+
+Optional image tag:
+
+```bash
+cd applications/template
+../../gradlew bootJar
+build-image my-registry/template:1.0.0
+```
+
+The script looks for a `Dockerfile` in the current directory. If it does not find one, it fails immediately.
+The script assumes the application has already been built. It does not invoke Gradle for you.
+It is only a local convenience wrapper around `docker build -t ... .`.
+
+## Run Image
+
+Use [buildSrc/scripts/run-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/run-image) to run the image locally after building it.
+
+Example:
+
+```bash
+cd applications/template
+run-image
+```
+
+Optional image tag and host port:
+
+```bash
+cd applications/template
+run-image template:latest 8081
+```
+
+By default `run-image` sets `DB_HOST=host.docker.internal` so the containerized app connects back to the local PostgreSQL instance started by `compose up`:
+
+```text
+jdbc:postgresql://host.docker.internal:15432/template_app
+```
+
+The template app builds its JDBC URL from [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml):
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:template_app}
+```
+
+That means:
+
+- `run-image` only needs to override `DB_HOST` for the common local container case
+- `DB_PORT` and `DB_NAME` stay available when an application needs something different
+- the database name stays with the application config instead of being hardcoded in the script
+
+The username and password still come from [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml). Override the host if needed:
+
+```bash
+DB_HOST=192.168.1.50 run-image
+```
+
+Override other datasource parts the same way if needed:
+
+```bash
+DB_PORT=25432 DB_NAME=billing run-image
+```
+
 ### Default connection details
 
 - PostgreSQL: `localhost:15432`
@@ -140,4 +214,18 @@ The important point is that local isolation happens by database, not by starting
 
 ### Spring Boot alignment
 
-The sample app includes `spring-boot-docker-compose`, so `bootRun` can start the local Postgres services automatically. The app datasource itself points explicitly at the `template_app` database so the multi-database convention stays visible in application configuration.
+The sample app includes `spring-boot-docker-compose`, so `bootRun` can start the local Postgres services automatically. The app datasource uses the standard `spring.datasource.url` property, but the host, port, and database name are externalized so local image runs can override only what they need.
+
+## Template Dockerfile
+
+The template application now has its own Dockerfile at [applications/template/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/template/Dockerfile).
+
+It is inspired by the centralized Spring Boot Dockerfile pattern from the other repo, but kept local to the application so the packaging flow stays straightforward in this template.
+
+Build it with:
+
+```bash
+cd applications/template
+../../gradlew bootJar
+docker build -t template:latest .
+```
