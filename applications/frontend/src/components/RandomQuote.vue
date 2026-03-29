@@ -40,8 +40,9 @@ onMounted(loadQuote)
       <p class="eyebrow">Frontend + Backend Pattern</p>
       <h1>Vue frontend calling the Spring Boot backend.</h1>
       <p class="lede">
-        During local development, Vite proxies <code>/api</code> requests to the backend on
-        <code>localhost:8080</code>. The browser only talks to relative paths.
+        During local development, Traefik routes browser traffic to the Vite dev server and proxies
+        <code>/api</code> requests to the backend on <code>localhost:8080</code>. The browser only
+        talks to relative paths.
       </p>
 
       <div class="actions">
@@ -77,7 +78,7 @@ onMounted(loadQuote)
       <article class="info-card">
         <p class="eyebrow">Development</p>
         <p class="info-text">
-          Vite proxies that request to <code>http://localhost:8080</code>.
+          Traefik proxies that request to <code>http://localhost:8080</code>.
         </p>
       </article>
 
