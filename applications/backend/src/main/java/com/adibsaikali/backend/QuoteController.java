@@ -16,11 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-public class MessageController {
+public class QuoteController {
 
     private final QuoteRepository quoteRepository;
 
-    public MessageController(QuoteRepository quoteRepository) {
+    public QuoteController(QuoteRepository quoteRepository) {
         this.quoteRepository = quoteRepository;
     }
 
