@@ -1,231 +1,214 @@
 # Spring Boot Gradle Template
 
-**A Spring Boot Gradle template that “just works” from laptop to production.**
+This repository is a working Spring Boot template with:
 
-This repository shows you how to create a Spring Boot project that “just works” from the moment you clone it. You can import it into your IDE and run the main class, or simply execute `bootRun`—without the brittleness and frustration of wrestling with complex local configurations. Built on a philosophy of *convention over configuration*, it provides a clear structure for multi-module applications and a consistent development experience from local dev to production.
+- a multi-module Gradle layout
+- one sample application under [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template)
+- one shared local PostgreSQL + pgAdmin setup in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml)
+- a local Docker packaging flow for the template app
+- GitHub Actions workflows for CI and tagged releases
 
-## Conventions
+## Repository Layout
 
-This template follows a set of conventions to ensure a predictable and consistent development experience:
+- [applications](/Users/adib/dev/app-components/boot-gradle-template/applications)
+  Deployable applications. The sample app lives in [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template).
+- [components](/Users/adib/dev/app-components/boot-gradle-template/components)
+  Reusable shared code.
+- [platform](/Users/adib/dev/app-components/boot-gradle-template/platform)
+  Shared dependency platform for the build.
+- [buildSrc](/Users/adib/dev/app-components/boot-gradle-template/buildSrc)
+  Gradle build logic and small local helper scripts.
 
-**Project structure**  
-Defines how applications, shared components, and platform code are organized.  
-*Outcome: a predictable layout that makes it easy to navigate and extend the codebase.*  
+## Quick Start
 
-**Local development**  
-Establishes how developers run the project locally, including services like databases and message brokers.  
-*Outcome: a consistent “clone and run” experience that works across all developer machines.*  
-
-**Configuration management**  
-Standardizes how application settings are defined and overridden for different environments.  
-*Outcome: simple, reliable configuration from local development through production.*  
-
-**Dependency management**  
-Centralizes version control for all third-party libraries and plugins.  
-*Outcome: consistent dependencies across modules and fewer version conflicts.*  
-
-**Build and quality enforcement**  
-Applies automated formatting, testing, and security checks during the build.  
-*Outcome: a maintainable, high-quality codebase with fewer regressions.*  
-
-**CI/CD pipelines**  
-Defines how builds, tests, and deployments are automated in the pipeline.  
-*Outcome: faster feedback and reliable releases without manual intervention.*  
-
-**Documentation**  
-Captures architectural decisions and module-specific information.  
-*Outcome: shared context and easier onboarding for new team members.*  
-
-**Modular and optimized builds**  
-The modular structure and clear separation of responsibilities make builds faster and more reliable.  
-*Outcome: support for parallel builds, better Gradle build caching, and incremental compilation for quicker feedback loops.*  
-
-## Local Postgres
-
-Stage 1 of local Docker support is a shared PostgreSQL plus pgAdmin setup in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml).
-
-### Why this shape
-
-This repository can eventually host multiple applications and shared components. Rather than giving each application its own PostgreSQL container, the default convention is:
-
-- one shared local PostgreSQL instance
-- one database per application
-- shared local credentials
-- pgAdmin preconfigured to connect without extra setup
-
-That keeps local infrastructure simple while still isolating applications at the database level.
-
-### Commands
-
-Use the `compose` helper from `buildSrc/scripts`:
+Start the shared local database:
 
 ```bash
 compose up
-compose ps
-compose down
-compose clean
 ```
 
-If direnv is active, `.envrc` adds `buildSrc/scripts` to `PATH` so `compose ...` works from anywhere in the repo. Without direnv, run [buildSrc/scripts/compose](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/compose) directly.
+Run the template app directly with Spring Boot:
 
-### Compose helper
+```bash
+./gradlew :applications:template:bootRun
+```
 
-The helper script lives at [buildSrc/scripts/compose](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/compose) and is a thin wrapper around `docker compose` for this repository.
+Run the tests:
 
-What it does:
+```bash
+./gradlew test
+```
 
-- always targets the root [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml)
-- works from any directory in the repo
-- loads `.env` and `.env.local` from the repo root before running Docker Compose
-- provides `compose clean`, which runs `docker compose down -v --remove-orphans`
+## Local Database
 
-What it does not do:
+The root [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml) starts:
 
-- it does not replace Docker Compose concepts or hide service definitions
-- it does not create extra config files outside the repository conventions
-- it does not manage multiple compose files yet
+- PostgreSQL on `localhost:15432`
+- pgAdmin on `http://localhost:15433`
 
-Requirements:
+Default local credentials:
 
-- `docker`
+- Postgres admin user: `postgres`
+- Postgres admin password: `password`
+- Template app database: `template_app`
+- Template app database user: `template_app`
+- Template app database password: `password`
+
+The local convention is:
+
+- one shared Postgres server per repository
+- one logical database per application
+- one application-specific database user per application
+
+When another application is added, extend the inline SQL in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml) with another user/database pair.
+
+## Compose Helper
+
+The repo includes [buildSrc/scripts/compose](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/compose), a thin wrapper around `docker compose`.
+
+Supported commands:
+
+- `compose up`
+- `compose down`
+- `compose ps`
+- `compose logs`
+- `compose clean`
+
+The helper always targets the root [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml) and loads `.env` and `.env.local` if they exist.
+
+## Gradle Helper Scripts
+
+The repo also includes short Gradle helper commands under [buildSrc/scripts/gradle](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle).
+
+If direnv is active, [.envrc](/Users/adib/dev/app-components/boot-gradle-template/.envrc) adds this directory to `PATH`, so these commands can be run directly from the repo.
+
+Available commands:
+
+- [g](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle/g)
+  Runs `gradlew` with the arguments you pass through.
+- [b](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle/b)
+  Runs `gradlew spotlessApply build --parallel`.
+- [cb](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle/cb)
+  Runs `gradlew clean build --parallel --no-build-cache --warning-mode all`.
+- [ct](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle/ct)
+  Runs `gradlew cleanTest test --parallel`.
+- [s](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/gradle/s)
+  Runs `gradlew spotlessApply`.
 
 Examples:
 
 ```bash
-compose up
-compose logs -f postgres
-compose clean
+g :applications:template:bootRun
+b
+ct
+s
 ```
 
-## Build Image
+## Template Application
 
-Use [buildSrc/scripts/build-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/build-image) from an application directory that contains a `Dockerfile`.
+The sample application is in [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template).
 
-Example for the template app:
+It currently demonstrates:
 
-```bash
-cd applications/template
-../../gradlew bootJar
-build-image
-```
+- Spring MVC
+- Spring Data JPA
+- Flyway
+- PostgreSQL
+- Testcontainers
 
-Optional image tag:
+The sample domain is a small quotes application backed by a seeded `quotes` table.
 
-```bash
-cd applications/template
-../../gradlew bootJar
-build-image my-registry/template:1.0.0
-```
+## Configuration Convention
 
-The script looks for a `Dockerfile` in the current directory. If it does not find one, it fails immediately.
-The script assumes the application has already been built. It does not invoke Gradle for you.
-It is only a local convenience wrapper around `docker build -t ... .`.
-
-## Run Image
-
-Use [buildSrc/scripts/run-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/run-image) to run the image locally after building it.
-
-Example:
-
-```bash
-cd applications/template
-run-image
-```
-
-Optional image tag and host port:
-
-```bash
-cd applications/template
-run-image template:latest 8081
-```
-
-By default `run-image` sets `DB_HOST=host.docker.internal` so the containerized app connects back to the local PostgreSQL instance started by `compose up`:
-
-```text
-jdbc:postgresql://host.docker.internal:15432/template_app
-```
-
-The template app builds its JDBC URL from [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml):
+The template app uses standard Spring Boot datasource configuration in [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml):
 
 ```yaml
 spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:template_app}
+    username: template_app
+    password: password
 ```
 
 That means:
 
-- `run-image` only needs to override `DB_HOST` for the common local container case
-- `DB_PORT` and `DB_NAME` stay available when an application needs something different
-- the database name stays with the application config instead of being hardcoded in the script
+- local `bootRun` works against the shared local Postgres by default
+- container runs can override only the host, port, or database name when needed
+- the database name stays owned by the application config, not by helper scripts
 
-The username and password still come from [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml). Override the host if needed:
+## Local Image Workflow
 
-```bash
-DB_HOST=192.168.1.50 run-image
-```
+The template app has its own Dockerfile at [applications/template/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/template/Dockerfile).
 
-Override other datasource parts the same way if needed:
-
-```bash
-DB_PORT=25432 DB_NAME=billing run-image
-```
-
-### Default connection details
-
-- PostgreSQL: `localhost:15432`
-- pgAdmin: `http://localhost:15433`
-- Admin user: `postgres`
-- Password: `password`
-- Template app database: `template_app`
-- Template app database user: `template_app`
-
-### Template app database
-
-The shared PostgreSQL server is started by [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml), and the template app database is created by the inline `postgres_init` script in that same file:
-
-```sql
-CREATE USER template_app WITH PASSWORD 'password';
-
-CREATE DATABASE template_app
-    WITH
-    OWNER = template_app
-    ENCODING = 'UTF8'
-    LC_COLLATE = 'en_US.utf8'
-    LC_CTYPE = 'en_US.utf8'
-    TABLESPACE = pg_default
-    CONNECTION LIMIT = -1;
-```
-
-This is the convention the repo should follow as more applications are added: one Postgres server, many logical databases, and one app-specific user per database.
-
-### Adding another application database
-
-When a new application is added, extend the same inline init block in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml), for example:
-
-```sql
-CREATE USER billing WITH PASSWORD 'password';
-CREATE DATABASE billing
-    WITH
-    OWNER = billing;
-```
-
-The important point is that local isolation happens by database, not by starting a separate PostgreSQL container per application.
-
-### Spring Boot alignment
-
-The sample app includes `spring-boot-docker-compose`, so `bootRun` can start the local Postgres services automatically. The app datasource uses the standard `spring.datasource.url` property, but the host, port, and database name are externalized so local image runs can override only what they need.
-
-## Template Dockerfile
-
-The template application now has its own Dockerfile at [applications/template/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/template/Dockerfile).
-
-It is inspired by the centralized Spring Boot Dockerfile pattern from the other repo, but kept local to the application so the packaging flow stays straightforward in this template.
-
-Build it with:
+Build the jar:
 
 ```bash
 cd applications/template
 ../../gradlew bootJar
-docker build -t template:latest .
 ```
+
+Build the image:
+
+```bash
+build-image
+```
+
+Run the image:
+
+```bash
+run-image
+```
+
+What the helper scripts do:
+
+- [buildSrc/scripts/build-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/build-image)
+  Runs `docker build -t <current-directory>:latest .` from an application directory.
+- [buildSrc/scripts/run-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/run-image)
+  Runs the local image and sets `DB_HOST=host.docker.internal` so the container can connect back to the shared local Postgres.
+
+Examples:
+
+```bash
+cd applications/template
+../../gradlew bootJar
+build-image
+run-image
+```
+
+Custom image tag:
+
+```bash
+build-image my-registry/template:1.0.0
+```
+
+Custom host port:
+
+```bash
+run-image template:latest 8081
+```
+
+Custom database overrides:
+
+```bash
+DB_HOST=192.168.1.50 run-image
+DB_PORT=25432 DB_NAME=billing run-image
+```
+
+## Testing
+
+Run all tests:
+
+```bash
+./gradlew test
+```
+
+The template app tests use Spring Boot Testcontainers support and start PostgreSQL automatically during the test run.
+
+## GitHub Workflows
+
+This repo includes two workflows under [`.github/workflows`](/Users/adib/dev/app-components/boot-gradle-template/.github/workflows):
+
+- [ci.yml](/Users/adib/dev/app-components/boot-gradle-template/.github/workflows/ci.yml)
+  Runs `./gradlew test` on pull requests and pushes to `main`.
+- [release.yml](/Users/adib/dev/app-components/boot-gradle-template/.github/workflows/release.yml)
+  Runs on tag push, builds the template app jar, creates a GitHub release, and attaches the built jar.
