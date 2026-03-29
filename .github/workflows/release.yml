@@ -25,16 +25,16 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Build template jar
-        run: ./gradlew :applications:template:bootJar
+      - name: Build backend jar
+        run: ./gradlew :applications:backend:bootJar
 
       - name: Resolve release asset
         id: jar
         run: |
-          jar_path="$(find applications/template/build/libs -maxdepth 1 -type f -name '*.jar' | head -n 1)"
+          jar_path="$(find applications/backend/build/libs -maxdepth 1 -type f -name '*.jar' | head -n 1)"
 
           if [[ -z "$jar_path" ]]; then
-            echo "No jar found in applications/template/build/libs" >&2
+            echo "No jar found in applications/backend/build/libs" >&2
             exit 1
           fi
 

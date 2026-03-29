@@ -6,7 +6,7 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import java.util.List;
 import org.springframework.http.HttpStatus;

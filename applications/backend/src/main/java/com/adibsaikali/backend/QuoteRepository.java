@@ -6,7 +6,7 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

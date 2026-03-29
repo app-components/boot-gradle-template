@@ -6,7 +6,7 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

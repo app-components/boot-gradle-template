@@ -3,11 +3,11 @@ server:
 
 spring:
   application:
-    name: template
+    name: backend
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:template_app}
-    username: template_app
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:backend}
+    username: backend
     password: password
 
   jpa:

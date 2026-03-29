@@ -1,4 +1,4 @@
-# Dockerfile for the template Spring Boot application.
+# Dockerfile for the backend Spring Boot application.
 #
 # This is intentionally local to the application rather than centralized.
 # It keeps the packaging flow obvious while still using the same core ideas as
@@ -7,9 +7,9 @@
 #   - Spring Boot jar extraction for better layer caching
 #
 # Build example:
-#   cd applications/template
+#   cd applications/backend
 #   ../../gradlew bootJar
-#   docker build -t template:latest .
+#   docker build -t backend:latest .
 
 ARG BASE_IMAGE=eclipse-temurin:25-jre
 

@@ -6,15 +6,15 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TemplateApplication {
+public class BackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TemplateApplication.class, args);
+        SpringApplication.run(BackendApplication.class, args);
     }
 }

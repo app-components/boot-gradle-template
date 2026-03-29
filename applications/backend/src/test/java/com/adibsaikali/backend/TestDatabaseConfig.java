@@ -6,7 +6,7 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;

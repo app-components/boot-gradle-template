@@ -8,4 +8,4 @@ dependencyResolutionManagement {
 
 include("platform")
 include("components:time")
-include("applications:template")
+include("applications:backend")

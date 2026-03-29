@@ -3,16 +3,16 @@
 This repository is a working Spring Boot template with:
 
 - a multi-module Gradle layout
-- one Spring Boot sample application under [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template)
+- one Spring Boot sample application under [applications/backend](/Users/adib/dev/app-components/boot-gradle-template/applications/backend)
 - one Vite Vue + TypeScript sample application under [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend)
 - one shared local PostgreSQL + pgAdmin setup in [compose.yaml](/Users/adib/dev/app-components/boot-gradle-template/compose.yaml)
-- a local Docker packaging flow for the Spring Boot sample application
+- a local Docker packaging flow for the backend sample application
 - GitHub Actions workflows for CI and tagged releases
 
 ## Repository Layout
 
 - [applications](/Users/adib/dev/app-components/boot-gradle-template/applications)
-  Deployable applications. The current examples are [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template) and [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend).
+  Deployable applications. The current examples are [applications/backend](/Users/adib/dev/app-components/boot-gradle-template/applications/backend) and [applications/frontend](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend).
 - [components](/Users/adib/dev/app-components/boot-gradle-template/components)
   Reusable shared code.
 - [platform](/Users/adib/dev/app-components/boot-gradle-template/platform)
@@ -28,10 +28,10 @@ Start the shared local database:
 compose up
 ```
 
-Run the template app directly with Spring Boot:
+Run the backend app directly with Spring Boot:
 
 ```bash
-./gradlew :applications:template:bootRun
+./gradlew :applications:backend:bootRun
 ```
 
 Run the frontend SPA locally:
@@ -59,9 +59,9 @@ Default local credentials:
 
 - Postgres admin user: `postgres`
 - Postgres admin password: `password`
-- Template app database: `template_app`
-- Template app database user: `template_app`
-- Template app database password: `password`
+- Backend app database: `backend`
+- Backend app database user: `backend`
+- Backend app database password: `password`
 
 The local convention is:
 
@@ -107,7 +107,7 @@ Available commands:
 Examples:
 
 ```bash
-g :applications:template:bootRun
+g :applications:backend:bootRun
 b
 ct
 s
@@ -115,7 +115,7 @@ s
 
 ## Template Application
 
-The sample application is in [applications/template](/Users/adib/dev/app-components/boot-gradle-template/applications/template).
+The sample application is in [applications/backend](/Users/adib/dev/app-components/boot-gradle-template/applications/backend).
 
 It currently demonstrates:
 
@@ -154,13 +154,13 @@ npm run build
 
 ## Configuration Convention
 
-The template app uses standard Spring Boot datasource configuration in [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/template/src/main/resources/application.yml):
+The backend app uses standard Spring Boot datasource configuration in [application.yml](/Users/adib/dev/app-components/boot-gradle-template/applications/backend/src/main/resources/application.yml):
 
 ```yaml
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:template_app}
-    username: template_app
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:15432}/${DB_NAME:backend}
+    username: backend
     password: password
 ```
 
@@ -172,12 +172,12 @@ That means:
 
 ## Local Image Workflow
 
-The template app has its own Dockerfile at [applications/template/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/template/Dockerfile).
+The backend app has its own Dockerfile at [applications/backend/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/backend/Dockerfile).
 
 Build the jar:
 
 ```bash
-cd applications/template
+cd applications/backend
 ../../gradlew bootJar
 ```
 
@@ -193,32 +193,48 @@ Run the image:
 run-image
 ```
 
+Stop the image:
+
+```bash
+stop-image
+```
+
 What the helper scripts do:
 
 - [buildSrc/scripts/build-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/build-image)
   Runs `docker build -t <current-directory>:latest .` from an application directory.
 - [buildSrc/scripts/run-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/run-image)
-  Runs the local image and sets `DB_HOST=host.docker.internal` so the container can connect back to the shared local Postgres.
+  Runs the local image, names the container after the current directory, and sets `DB_HOST=host.docker.internal` so the container can connect back to the shared local Postgres.
+- [buildSrc/scripts/stop-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/stop-image)
+  Stops the container started by `run-image`.
 
 Examples:
 
 ```bash
-cd applications/template
+cd applications/backend
 ../../gradlew bootJar
 build-image
 run-image
+stop-image
 ```
 
 Custom image tag:
 
 ```bash
-build-image my-registry/template:1.0.0
+build-image my-registry/backend:1.0.0
 ```
 
 Custom host port:
 
 ```bash
-run-image template:latest 8081
+run-image backend:latest 8081
+```
+
+Custom container name:
+
+```bash
+CONTAINER_NAME=my-backend run-image
+CONTAINER_NAME=my-backend stop-image
 ```
 
 Custom database overrides:
@@ -236,7 +252,7 @@ Run all tests:
 ./gradlew test
 ```
 
-The template app tests use Spring Boot Testcontainers support and start PostgreSQL automatically during the test run.
+The backend app tests use Spring Boot Testcontainers support and start PostgreSQL automatically during the test run.
 
 ## GitHub Workflows
 
@@ -245,4 +261,4 @@ This repo includes two workflows under [`.github/workflows`](/Users/adib/dev/app
 - [ci.yml](/Users/adib/dev/app-components/boot-gradle-template/.github/workflows/ci.yml)
   Runs `./gradlew test` on pull requests and pushes to `main`.
 - [release.yml](/Users/adib/dev/app-components/boot-gradle-template/.github/workflows/release.yml)
-  Runs on tag push, builds the template app jar, creates a GitHub release, and attaches the built jar.
+  Runs on tag push, builds the backend app jar, creates a GitHub release, and attaches the built jar.

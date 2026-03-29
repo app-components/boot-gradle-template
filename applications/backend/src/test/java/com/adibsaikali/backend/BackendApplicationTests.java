@@ -6,7 +6,7 @@
  * Proprietary and confidential
  */
 
-package com.adibsaikali.template;
+package com.adibsaikali.backend;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -18,7 +18,7 @@ import org.springframework.context.annotation.Import;
 
 @SpringBootTest
 @Import(TestDatabaseConfig.class)
-class TemplateApplicationTests {
+class BackendApplicationTests {
 
     @Autowired
     private QuoteRepository quoteRepository;

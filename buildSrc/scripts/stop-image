@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+# Stop a locally run container started with run-image.
+#
+# Conventions:
+# - Default container name is "<current-directory>".
+# - Override with CONTAINER_NAME when needed.
+#
+# Usage:
+#   stop-image
+#   CONTAINER_NAME=my-backend stop-image
+#   stop-image backend
+
+container_name="${1:-${CONTAINER_NAME:-$(basename "$PWD")}}"
+
+if ! docker container inspect "$container_name" >/dev/null 2>&1; then
+    echo "No container named '$container_name' exists."
+    exit 0
+fi
+
+echo "Stopping container '$container_name'"
+docker stop "$container_name"
