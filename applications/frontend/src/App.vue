@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
+import RandomQuote from './components/RandomQuote.vue'
 </script>
 
 <template>
-  <HelloWorld />
+  <RandomQuote />
 </template>

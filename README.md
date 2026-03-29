@@ -136,11 +136,14 @@ It currently demonstrates:
 - Vue 3
 - Vite
 - TypeScript
-- the default Vite Vue scaffold
+- a frontend-to-backend integration pattern using relative `/api` calls
+- Vite dev proxying to the backend on `localhost:8080`
 
 Run it locally:
 
 ```bash
+./gradlew :applications:backend:bootRun
+
 cd applications/frontend
 npm install
 npm run dev
@@ -151,6 +154,14 @@ Build it for production:
 ```bash
 npm run build
 ```
+
+The frontend fetches a random quote from:
+
+```text
+/api/quotes/random
+```
+
+During local development, Vite proxies `/api` to the backend, so the browser does not need direct cross-origin access and the backend does not need a default CORS policy just to support local development.
 
 ## Configuration Convention
 

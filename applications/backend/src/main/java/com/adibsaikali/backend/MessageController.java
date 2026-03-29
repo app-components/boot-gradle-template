@@ -24,17 +24,17 @@ public class MessageController {
         this.quoteRepository = quoteRepository;
     }
 
-    @GetMapping("/")
+    @GetMapping("/api/quotes/random")
     public Quote randomQuote() {
         return quoteRepository.findRandomQuote();
     }
 
-    @GetMapping("/quotes")
+    @GetMapping("/api/quotes")
     public List<Quote> getAll() {
         return quoteRepository.findAll();
     }
 
-    @GetMapping("/quotes/{id}")
+    @GetMapping("/api/quotes/{id}")
     public Quote getQuote(@PathVariable Integer id) {
         return quoteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
