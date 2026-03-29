@@ -155,6 +155,15 @@ Build it for production:
 npm run build
 ```
 
+The frontend also has an app-local Dockerfile at [applications/frontend/Dockerfile](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend/Dockerfile):
+
+```bash
+cd applications/frontend
+npm install
+npm run build
+docker build -t frontend:latest .
+```
+
 The frontend fetches a random quote from:
 
 ```text
@@ -215,9 +224,9 @@ What the helper scripts do:
 - [buildSrc/scripts/build-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/build-image)
   Runs `docker build -t <current-directory>:latest .` from an application directory.
 - [buildSrc/scripts/run-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/run-image)
-  Runs the local image, names the container after the current directory, and sets `DB_HOST=host.docker.internal` so the container can connect back to the shared local Postgres.
+  Runs the local image and reads optional per-application defaults from `.image.env`.
 - [buildSrc/scripts/stop-image](/Users/adib/dev/app-components/boot-gradle-template/buildSrc/scripts/stop-image)
-  Stops the container started by `run-image`.
+  Stops the container started by `run-image`, using the same optional `.image.env` defaults.
 
 Examples:
 
@@ -254,6 +263,13 @@ Custom database overrides:
 DB_HOST=192.168.1.50 run-image
 DB_PORT=25432 DB_NAME=billing run-image
 ```
+
+Application-specific image defaults can be kept in `.image.env` inside each application directory. The current examples use:
+
+- [applications/backend/.image.env](/Users/adib/dev/app-components/boot-gradle-template/applications/backend/.image.env)
+  backend listens on container port `8080` and defaults `DB_HOST` to `host.docker.internal`
+- [applications/frontend/.image.env](/Users/adib/dev/app-components/boot-gradle-template/applications/frontend/.image.env)
+  frontend listens on container port `80` and defaults the host port to `8081`
 
 ## Testing
 

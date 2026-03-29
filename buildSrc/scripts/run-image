@@ -7,9 +7,7 @@ set -Eeuo pipefail
 # - Run this from an application directory that already has a built image.
 # - Default image tag is "<current-directory>:latest".
 # - Default container name is "<current-directory>".
-# - Default host port is 8080.
-# - DB_HOST defaults to host.docker.internal so the containerized app can
-#   connect back to the shared local Postgres started by "compose up".
+# - Application-specific overrides can live in ".image.env" in the current directory.
 #
 # Usage:
 #   run-image
@@ -17,15 +15,37 @@ set -Eeuo pipefail
 #   run-image backend:latest 8081
 #   DB_HOST=192.168.1.50 run-image
 
-image_name="${1:-$(basename "$PWD"):latest}"
-container_name="${CONTAINER_NAME:-$(basename "$PWD")}"
-host_port="${2:-8080}"
-db_host="${DB_HOST:-host.docker.internal}"
+if [[ -f "$PWD/.image.env" ]]; then
+    # shellcheck disable=SC1091
+    source "$PWD/.image.env"
+fi
+
+image_name="${1:-${IMAGE_NAME:-$(basename "$PWD"):latest}}"
+container_name="${CONTAINER_NAME:-${IMAGE_CONTAINER_NAME:-$(basename "$PWD")}}"
+container_port="${IMAGE_CONTAINER_PORT:-8080}"
+host_port="${2:-${IMAGE_HOST_PORT:-8080}}"
+db_host="${DB_HOST:-${IMAGE_DB_HOST:-}}"
+db_port="${DB_PORT:-${IMAGE_DB_PORT:-}}"
+db_name="${DB_NAME:-${IMAGE_DB_NAME:-}}"
+
+docker_args=(
+  --rm
+  --name "${container_name}"
+  -p "${host_port}:${container_port}"
+)
+
+if [[ -n "$db_host" ]]; then
+    docker_args+=(--add-host=host.docker.internal:host-gateway)
+    docker_args+=(-e "DB_HOST=${db_host}")
+fi
+
+if [[ -n "$db_port" ]]; then
+    docker_args+=(-e "DB_PORT=${db_port}")
+fi
+
+if [[ -n "$db_name" ]]; then
+    docker_args+=(-e "DB_NAME=${db_name}")
+fi
 
 echo "Running Docker image '$image_name' as container '$container_name' on http://localhost:${host_port}"
-docker run --rm \
-  --name "${container_name}" \
-  --add-host=host.docker.internal:host-gateway \
-  -p "${host_port}:8080" \
-  -e "DB_HOST=${db_host}" \
-  "$image_name"
+docker run "${docker_args[@]}" "$image_name"

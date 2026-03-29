@@ -12,7 +12,12 @@ set -Eeuo pipefail
 #   CONTAINER_NAME=my-backend stop-image
 #   stop-image backend
 
-container_name="${1:-${CONTAINER_NAME:-$(basename "$PWD")}}"
+if [[ -f "$PWD/.image.env" ]]; then
+    # shellcheck disable=SC1091
+    source "$PWD/.image.env"
+fi
+
+container_name="${1:-${CONTAINER_NAME:-${IMAGE_CONTAINER_NAME:-$(basename "$PWD")}}}"
 
 if ! docker container inspect "$container_name" >/dev/null 2>&1; then
     echo "No container named '$container_name' exists."
