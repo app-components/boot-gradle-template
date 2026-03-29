@@ -1,0 +1,10 @@
+@edge = http://localhost:7070
+@email = developer@example.local
+
+### Email a random motivational quote through the local edge
+POST {{edge}}/api/quotes/email-random
+Content-Type: application/json
+
+{
+  "email": "{{email}}"
+}

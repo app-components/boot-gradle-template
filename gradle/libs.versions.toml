@@ -11,6 +11,7 @@ springCloud = "2025.1.1"
 threeTenExtra = "1.8.0"
 equalsVerifier = "4.4.1"
 greenMail = "2.1.8"
+mailpitTestcontainers = "1.3.0"
 
 [libraries]
 # BOMs
@@ -24,6 +25,7 @@ boot-devtools = { module = "org.springframework.boot:spring-boot-devtools" }
 
 # Spring Boot starters: web
 boot-starter-json = { module = "org.springframework.boot:spring-boot-starter-json" }
+boot-starter-mail = { module = "org.springframework.boot:spring-boot-starter-mail" }
 boot-starter-thymeleaf = { module = "org.springframework.boot:spring-boot-starter-thymeleaf" }
 boot-starter-webmvc = { module = "org.springframework.boot:spring-boot-starter-webmvc" }
 
@@ -56,6 +58,7 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 postgresql = { module = "org.postgresql:postgresql" }
 rest-assured = { module = "io.rest-assured:rest-assured" }
 testcontainers-junit-jupiter = { module = "org.testcontainers:testcontainers-junit-jupiter" }
+testcontainers-mailpit = { module = "ch.martinelli.oss:testcontainers-mailpit", version.ref = "mailpitTestcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:testcontainers-postgresql" }
 
 # Explicit-version libraries

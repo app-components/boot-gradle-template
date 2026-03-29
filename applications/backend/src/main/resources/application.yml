@@ -14,7 +14,21 @@ spring:
     username: backend
     password: password
 
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
   jpa:
     open-in-view: false
     hibernate:
       ddl-auto: none
+
+app:
+  mail:
+    from: ${APP_MAIL_FROM:quotes@example.local}

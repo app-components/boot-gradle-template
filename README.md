@@ -176,6 +176,7 @@ It currently demonstrates:
 - Spring Data JPA
 - Flyway
 - PostgreSQL
+- Spring Mail
 - Testcontainers
 
 The sample domain is a small quotes application backed by a seeded `quotes` table.
@@ -190,6 +191,7 @@ It currently demonstrates:
 - Vite
 - TypeScript
 - a frontend-to-backend integration pattern using relative `/api` calls
+- a small email-a-random-quote demo flow
 - local development through the shared Traefik edge proxy
 
 Run it locally:
@@ -232,6 +234,30 @@ The frontend fetches a random quote from:
 ```
 
 During local development, Traefik proxies `/api` to the backend and `/` to the Vite dev server, so the browser does not need direct cross-origin access and the backend does not need a default CORS policy just to support local development.
+
+## Mail Demo
+
+The sample app now includes a small mail demo:
+
+- the frontend can ask the backend to email a random motivational quote
+- the backend sends that mail through the local Mailpit SMTP service on `localhost:1025`
+- developers can open Mailpit on `http://localhost:8025` to inspect the delivered message
+
+The backend endpoint is:
+
+```text
+POST /api/quotes/email-random
+```
+
+with a JSON request body like:
+
+```json
+{
+  "email": "developer@example.local"
+}
+```
+
+Automated coverage for this flow uses a Mailpit Testcontainer instead of the shared Compose service, so tests stay isolated and repeatable.
 
 ## Configuration Convention
 
