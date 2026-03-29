@@ -6,7 +6,7 @@ This repository is a working Spring Boot template with:
 - one Spring Boot sample application under [applications/backend](applications/backend)
 - one Vite Vue + TypeScript sample application under [applications/frontend](applications/frontend)
 - one local Traefik edge proxy in [compose.yaml](compose.yaml) for browser access during development
-- one shared local PostgreSQL + pgAdmin setup in [compose.yaml](compose.yaml)
+- one shared local infrastructure setup in [compose.yaml](compose.yaml), including PostgreSQL, pgAdmin, and Mailpit
 - a local Docker packaging flow for the backend sample application
 - GitHub Actions workflows for CI and tagged releases
 
@@ -55,13 +55,15 @@ Run the tests:
 ./gradlew test
 ```
 
-## Local Database
+## Local Infrastructure
 
 The root [compose.yaml](compose.yaml) starts:
 
 - Traefik on `http://localhost:7070`
 - PostgreSQL on `localhost:15432`
 - pgAdmin on `http://localhost:15433`
+- Mailpit web UI on `http://localhost:8025`
+- Mailpit SMTP on `localhost:1025`
 
 Default local credentials:
 
@@ -75,10 +77,13 @@ The local convention is:
 
 - one shared local edge proxy per repository
 - one shared Postgres server per repository
+- one shared dev email service per repository
 - one logical database per application
 - one application-specific database user per application
 
 When another application is added, extend the inline SQL in [compose.yaml](compose.yaml) with another user/database pair.
+
+Mailpit is the generic local email catcher for this template. Applications can send SMTP traffic to `localhost:1025`, and developers can inspect captured mail in the Mailpit web UI on `http://localhost:8025`.
 
 ## Compose Helper
 
@@ -104,6 +109,7 @@ The local environment is split into two parts:
   - Traefik on `localhost:7070`
   - PostgreSQL on `localhost:15432`
   - pgAdmin on `localhost:15433`
+  - Mailpit on `localhost:1025` for SMTP and `localhost:8025` for the web UI
 - locally launched processes
   - the frontend Vite dev server on `localhost:5173`
   - the Spring Boot backend on `localhost:8080`
@@ -130,6 +136,7 @@ Traffic flow during local development:
 - Traefik routes `/api` requests to the backend
 - the backend connects to PostgreSQL
 - pgAdmin connects to PostgreSQL as a local operator tool
+- any app that needs SMTP can send mail to Mailpit on `localhost:1025`
 
 ## Gradle Helper Scripts
 

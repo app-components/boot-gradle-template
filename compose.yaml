@@ -3,13 +3,18 @@
 # =============================================================================
 #
 # This file defines the shared local infrastructure for the repository.
-# Today that means one PostgreSQL server plus pgAdmin. As this template grows
-# into a multi-application repository, additional logical databases should be
-# added to the inline init SQL below rather than by starting more Postgres
-# containers.
+# Today that means:
+#   - one Traefik edge proxy
+#   - one PostgreSQL server
+#   - one pgAdmin instance
+#   - one Mailpit SMTP/web UI service
+#
+# As this template grows into a multi-application repository, additional
+# logical databases should be added to the inline init SQL below rather than
+# by starting more Postgres containers.
 #
 # WHY THIS FILE EXISTS:
-#   - `compose up` gives every developer the same local database environment
+#   - `compose up` gives every developer the same local infrastructure
 #   - One Postgres server can host multiple application databases locally
 #   - The backend app demonstrates the naming convention:
 #       app name = database name = application username
@@ -43,6 +48,9 @@
 #       PGADMIN_IMAGE
 #       PGADMIN_PORT
 #       EDGE_PORT
+#       MAILPIT_IMAGE
+#       MAILPIT_WEB_PORT
+#       MAILPIT_SMTP_PORT
 #
 # QUICK REFERENCE:
 #   Start services:   compose up
@@ -114,6 +122,16 @@ services:
       - "${EDGE_PORT:-7070}:8080"
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ==========================================================================
+  # Local Messaging Services
+  # ==========================================================================
+  mailpit:
+    image: "${MAILPIT_IMAGE:-axllent/mailpit:v1.29}"
+    ports:
+      - "${MAILPIT_WEB_PORT:-8025}:8025"
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
     restart: unless-stopped
 
   # ==========================================================================
