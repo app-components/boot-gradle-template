@@ -21,45 +21,45 @@ import java.util.Objects;
  * easier. The TimeService wraps a clock and offers convenience methods to work with time.
  */
 public abstract class TimeService {
-    protected final Clock clock;
+  protected final Clock clock;
 
-    protected TimeService(Clock clock) {
-        Objects.requireNonNull(clock);
-        this.clock = clock;
-    }
+  protected TimeService(Clock clock) {
+    Objects.requireNonNull(clock);
+    this.clock = clock;
+  }
 
-    /**
-     * @return The clock used by the TimeService
-     */
-    public Clock clock() {
-        return this.clock;
-    }
+  /**
+   * @return The clock used by the TimeService
+   */
+  public Clock clock() {
+    return this.clock;
+  }
 
-    /**
-     * @return the current Instant according to the TimeService clock
-     */
-    public final Instant instant() {
-        return clock.instant();
-    }
+  /**
+   * @return the current Instant according to the TimeService clock
+   */
+  public final Instant instant() {
+    return clock.instant();
+  }
 
-    /**
-     * @return the current date according to the TimeService clock
-     */
-    public final LocalDate date() {
-        return LocalDate.now(this.clock);
-    }
+  /**
+   * @return the current date according to the TimeService clock
+   */
+  public final LocalDate date() {
+    return LocalDate.now(this.clock);
+  }
 
-    /**
-     * @return the current time according to the TimeService clock
-     */
-    public final LocalTime time() {
-        return LocalTime.now(this.clock);
-    }
+  /**
+   * @return the current time according to the TimeService clock
+   */
+  public final LocalTime time() {
+    return LocalTime.now(this.clock);
+  }
 
-    /**
-     * @return the current date & time according to the TimeService clock
-     */
-    public final LocalDateTime dateTime() {
-        return LocalDateTime.now(this.clock);
-    }
+  /**
+   * @return the current date & time according to the TimeService clock
+   */
+  public final LocalDateTime dateTime() {
+    return LocalDateTime.now(this.clock);
+  }
 }

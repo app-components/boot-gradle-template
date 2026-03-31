@@ -17,21 +17,21 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 /**
  * Testcontainers configuration shared by integration-style tests.
  *
- * <p>Containers are declared as Spring beans so Spring controls their lifecycle
- * and exposes connection details to the application context.
+ * <p>Containers are declared as Spring beans so Spring controls their lifecycle and exposes
+ * connection details to the application context.
  */
 @TestConfiguration(proxyBeanMethods = false)
 public class TestContainersConfig {
 
-    @Bean
-    @ServiceConnection
-    PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer("postgres:18");
-    }
+  @Bean
+  @ServiceConnection
+  PostgreSQLContainer postgres() {
+    return new PostgreSQLContainer("postgres:18");
+  }
 
-    @Bean
-    @ServiceConnection
-    MailpitContainer mailpitContainer() {
-        return new MailpitContainer();
-    }
+  @Bean
+  @ServiceConnection
+  MailpitContainer mailpitContainer() {
+    return new MailpitContainer();
+  }
 }

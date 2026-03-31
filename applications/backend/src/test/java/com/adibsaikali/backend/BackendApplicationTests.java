@@ -27,31 +27,30 @@ import org.springframework.web.context.WebApplicationContext;
 @Import(TestContainersConfig.class)
 class BackendApplicationTests {
 
-    @Autowired
-    private QuoteRepository quoteRepository;
+  @Autowired private QuoteRepository quoteRepository;
 
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+  @Autowired private WebApplicationContext webApplicationContext;
 
-    private MockMvc mockMvc;
+  private MockMvc mockMvc;
 
-    @BeforeEach
-    void setUpMockMvc() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-    }
+  @BeforeEach
+  void setUpMockMvc() {
+    mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
+  }
 
-    @Test
-    @DisplayName("Database has 5 quotes")
-    void databaseHasFiveQuotes() {
-        assertThat(quoteRepository.findAll()).hasSize(5);
-    }
+  @Test
+  @DisplayName("Database has 5 quotes")
+  void databaseHasFiveQuotes() {
+    assertThat(quoteRepository.findAll()).hasSize(5);
+  }
 
-    @Test
-    @DisplayName("Random quote API returns a quote")
-    void randomQuoteApiReturnsAQuote() throws Exception {
-        mockMvc.perform(get("/api/quotes/random"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.quote").isNotEmpty())
-                .andExpect(jsonPath("$.author").isNotEmpty());
-    }
+  @Test
+  @DisplayName("Random quote API returns a quote")
+  void randomQuoteApiReturnsAQuote() throws Exception {
+    mockMvc
+        .perform(get("/api/quotes/random"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.quote").isNotEmpty())
+        .andExpect(jsonPath("$.author").isNotEmpty());
+  }
 }

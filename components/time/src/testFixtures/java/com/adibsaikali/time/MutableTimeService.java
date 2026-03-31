@@ -19,25 +19,25 @@ import org.threeten.extra.MutableClock;
  */
 public final class MutableTimeService extends TimeService {
 
-    public MutableTimeService() {
-        super(MutableClock.epochUTC());
-    }
+  public MutableTimeService() {
+    super(MutableClock.epochUTC());
+  }
 
-    /**
-     * Advanced the TimeService clock by the specified duration
-     *
-     * @param duration the amount of time to advance the clock by
-     */
-    public void advanceClock(Duration duration) {
-        ((MutableClock) this.clock).add(duration);
-    }
+  /**
+   * Advanced the TimeService clock by the specified duration
+   *
+   * @param duration the amount of time to advance the clock by
+   */
+  public void advanceClock(Duration duration) {
+    ((MutableClock) this.clock).add(duration);
+  }
 
-    /**
-     * Rewind the TimeService clock by the specified duration
-     *
-     * @param duration the amount of time to rewind the clock by
-     */
-    public void rewindClock(Duration duration) {
-        ((MutableClock) this.clock).add(duration.negated());
-    }
+  /**
+   * Rewind the TimeService clock by the specified duration
+   *
+   * @param duration the amount of time to rewind the clock by
+   */
+  public void rewindClock(Duration duration) {
+    ((MutableClock) this.clock).add(duration.negated());
+  }
 }

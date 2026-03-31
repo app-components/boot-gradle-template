@@ -19,17 +19,17 @@ import org.junit.jupiter.api.Test;
 @DisplayName("Recommended TimeService Usage")
 class RecommendedUsageExampleTest {
 
-    @Test
-    @DisplayName("Time sensitive business logic is easy to test")
-    void testTimeTravel() {
+  @Test
+  @DisplayName("Time sensitive business logic is easy to test")
+  void testTimeTravel() {
 
-        var timeService = new MutableTimeService();
-        var offerService = new OfferService(timeService);
-        var checkoutService = new CheckoutService(timeService);
+    var timeService = new MutableTimeService();
+    var offerService = new OfferService(timeService);
+    var checkoutService = new CheckoutService(timeService);
 
-        var offer = offerService.createOffer("123");
-        timeService.advanceClock(Duration.ofDays(100));
+    var offer = offerService.createOffer("123");
+    timeService.advanceClock(Duration.ofDays(100));
 
-        Assertions.assertThat(checkoutService.validOffer(offer)).isFalse();
-    }
+    Assertions.assertThat(checkoutService.validOffer(offer)).isFalse();
+  }
 }

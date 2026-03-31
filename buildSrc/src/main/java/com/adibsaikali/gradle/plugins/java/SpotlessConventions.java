@@ -22,7 +22,7 @@ class SpotlessConventions {
         spotless.setEnforceCheck(true);
 
         spotless.java(java -> {
-            java.palantirJavaFormat();
+            java.googleJavaFormat();
             java.removeUnusedImports();
             java.licenseHeader(readFile("spotless/template.license.java"));
             java.targetExclude("build/generated/**");

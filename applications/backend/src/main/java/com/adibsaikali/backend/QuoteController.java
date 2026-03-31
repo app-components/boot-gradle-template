@@ -21,31 +21,34 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 public class QuoteController {
 
-    private final QuoteRepository quoteRepository;
-    private final QuoteEmailService quoteEmailService;
+  private final QuoteRepository quoteRepository;
+  private final QuoteEmailService quoteEmailService;
 
-    public QuoteController(QuoteRepository quoteRepository, QuoteEmailService quoteEmailService) {
-        this.quoteRepository = quoteRepository;
-        this.quoteEmailService = quoteEmailService;
-    }
+  public QuoteController(QuoteRepository quoteRepository, QuoteEmailService quoteEmailService) {
+    this.quoteRepository = quoteRepository;
+    this.quoteEmailService = quoteEmailService;
+  }
 
-    @GetMapping("/api/quotes/random")
-    public Quote randomQuote() {
-        return quoteRepository.findRandomQuote();
-    }
+  @GetMapping("/api/quotes/random")
+  public Quote randomQuote() {
+    return quoteRepository.findRandomQuote();
+  }
 
-    @GetMapping("/api/quotes")
-    public List<Quote> getAll() {
-        return quoteRepository.findAll();
-    }
+  @GetMapping("/api/quotes")
+  public List<Quote> getAll() {
+    return quoteRepository.findAll();
+  }
 
-    @GetMapping("/api/quotes/{id}")
-    public Quote getQuote(@PathVariable Integer id) {
-        return quoteRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-    }
+  @GetMapping("/api/quotes/{id}")
+  public Quote getQuote(@PathVariable Integer id) {
+    return quoteRepository
+        .findById(id)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+  }
 
-    @PostMapping("/api/quotes/email-random")
-    public ResponseEntity<QuoteEmailResponse> emailRandomQuote(@RequestBody QuoteEmailRequest request) {
-        return ResponseEntity.accepted().body(quoteEmailService.emailRandomQuote(request.email()));
-    }
+  @PostMapping("/api/quotes/email-random")
+  public ResponseEntity<QuoteEmailResponse> emailRandomQuote(
+      @RequestBody QuoteEmailRequest request) {
+    return ResponseEntity.accepted().body(quoteEmailService.emailRandomQuote(request.email()));
+  }
 }
