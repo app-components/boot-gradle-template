@@ -20,8 +20,10 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.base.TestingExtension;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification;
 import org.gradle.testing.jacoco.tasks.JacocoReport;
 
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -38,6 +40,9 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     // Update this version when the shared Java toolchain for the build changes.
     private static final int JAVA_VERSION = 25;
+
+    // Minimum percentage of code coverage required; the build fails below this threshold.
+    private static final int MINIMUM_COVERAGE_PERCENT = 50;
 
     // Strict warning policy applied to every module. Modules may remove individual flags from
     // their own build script when a transition (e.g. a major dependency upgrade) temporarily
@@ -159,17 +164,41 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     }
 
     /**
-     * Wires JaCoCo into every JVM test task in the module so each test run produces a code
-     * coverage report at {@code build/reports/jacoco/}. The JaCoCo runtime version comes from
-     * the Gradle distribution being used, so the tool version moves in lockstep with Gradle
-     * upgrades. Modules that need additional report formats (XML for Codecov or SonarQube,
-     * CSV for spreadsheet tooling) can extend the {@code jacocoTestReport} task in their own
-     * build script.
+     * Wires JaCoCo into every JVM test task in the module. Every test run produces a code
+     * coverage report at {@code build/reports/jacoco/}, and the {@code check} lifecycle
+     * enforces a minimum coverage threshold — builds whose coverage falls below
+     * {@link #MINIMUM_COVERAGE_PERCENT} fail.
+     *
+     * <p>The JaCoCo runtime version comes from the Gradle distribution being used, so the
+     * tool version moves in lockstep with Gradle upgrades. Modules that need additional
+     * report formats (XML for Codecov or SonarQube, CSV for spreadsheet tooling) can extend
+     * the {@code jacocoTestReport} task in their own build script.
      */
     private void measureCoverageWithJacoco(Project project) {
         // Generate the coverage report after every test task so the report is always fresh.
         project.getTasks().withType(Test.class).configureEach(test ->
                 test.finalizedBy(project.getTasks().withType(JacocoReport.class))
+        );
+
+        // Fail the build when bundle-level coverage is below the configured threshold. The
+        // unscaledVal/scale form converts an integer percentage into a 0.0-1.0 ratio without
+        // floating-point loss (e.g. 50 -> 0.50).
+        BigDecimal minimumRatio = BigDecimal.valueOf(MINIMUM_COVERAGE_PERCENT, 2);
+        project.getTasks().withType(JacocoCoverageVerification.class).configureEach(task ->
+                task.violationRules(rules ->
+                        rules.rule(rule ->
+                                rule.limit(limit -> limit.setMinimum(minimumRatio))
+                        )
+                )
+        );
+
+        // Goal: enforce coverage on `./gradlew build` (and CI) but leave `./gradlew test`
+        // free of the threshold so a developer iterating on a change isn't blocked by
+        // coverage failures on every test run. `check` is Gradle's standard "run all checks"
+        // task and `build` depends on `check`, so wiring verification to `check` produces
+        // exactly that split.
+        project.getTasks().named("check").configure(check ->
+                check.dependsOn(project.getTasks().withType(JacocoCoverageVerification.class))
         );
     }
 
