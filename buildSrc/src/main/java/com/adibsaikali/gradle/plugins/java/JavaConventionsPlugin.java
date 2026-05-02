@@ -25,11 +25,9 @@ import java.util.List;
 
 public class JavaConventionsPlugin implements Plugin<Project> {
 
-    // Generic copyright header in the style used by the Spring Framework. The $YEAR token is
-    // replaced by Spotless with the file's first-stamp year (preserved on subsequent rewrites),
-    // and "-present" extends the range without requiring yearly maintenance. Adjust the wording
-    // here if your project needs a license identifier or a different rights statement; one edit
-    // propagates across the whole repository on the next spotlessApply.
+    // Customize this header to fit your project. The $YEAR token is replaced by Spotless with
+    // the file's first-stamp year (preserved across subsequent rewrites). One edit here
+    // propagates across the repository on the next spotlessApply.
     private static final String JAVA_LICENSE_HEADER = """
             /*
              * Copyright $YEAR-present the original author or authors.
@@ -112,39 +110,10 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     }
 
     /**
-     * Forbids any test from importing JUnit's assertion API ({@code Assertions}, {@code Assert},
-     * and their static imports). Tests must use AssertJ's {@code assertThat(...)} style instead,
-     * which produces clearer failure messages and reads more fluently when chaining checks.
-     *
-     * <p>The check is wired in as a finalizer on every {@code Test} task, so violations fail
-     * the build during normal test runs rather than waiting to be caught in code review.
-     */
-    private void banJunitAssertions(Project project) {
-        // Define the restrict-imports rule: ban JUnit assertion imports everywhere and explain why.
-        project.getTasks().withType(RestrictImports.class).configureEach(task ->
-                task.group(group -> {
-                    group.getReason().set("Use assertj instead");
-                    group.getBasePackages().set(List.of("**"));
-                    group.getBannedImports().set(List.of(
-                            "org.junit.jupiter.api.Assertions",
-                            "static org.junit.jupiter.api.Assertions.*",
-                            "static org.junit.Assert.*",
-                            "org.junit.Assert"
-                    ));
-                })
-        );
-
-        // Run the rule after every test task so the check is part of normal test execution.
-        project.getTasks().withType(Test.class).configureEach(test ->
-                test.finalizedBy(project.getTasks().withType(RestrictImports.class))
-        );
-    }
-
-    /**
      * Wires up Spotless to format Java and SQL sources to a single shared style — Java with
-     * google-java-format and the proprietary license header, SQL with the shared DBeaver
-     * profile. This eliminates style debates and keeps diffs focused on real changes rather
-     * than whitespace.
+     * google-java-format and the shared license header, SQL with the shared DBeaver profile.
+     * This eliminates style debates and keeps diffs focused on real changes rather than
+     * whitespace.
      *
      * <p>Spotless runs as part of the {@code check} task, so any module whose code drifts
      * from the standard style fails the build. Run {@code ./gradlew spotlessApply} (or the
@@ -186,6 +155,35 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     }
 
     /**
+     * Forbids any test from importing JUnit's assertion API ({@code Assertions}, {@code Assert},
+     * and their static imports). Tests must use AssertJ's {@code assertThat(...)} style instead,
+     * which produces clearer failure messages and reads more fluently when chaining checks.
+     *
+     * <p>The check is wired in as a finalizer on every {@code Test} task, so violations fail
+     * the build during normal test runs rather than waiting to be caught in code review.
+     */
+    private void banJunitAssertions(Project project) {
+        // Define the restrict-imports rule: ban JUnit assertion imports everywhere and explain why.
+        project.getTasks().withType(RestrictImports.class).configureEach(task ->
+                task.group(group -> {
+                    group.getReason().set("Use assertj instead");
+                    group.getBasePackages().set(List.of("**"));
+                    group.getBannedImports().set(List.of(
+                            "org.junit.jupiter.api.Assertions",
+                            "static org.junit.jupiter.api.Assertions.*",
+                            "static org.junit.Assert.*",
+                            "org.junit.Assert"
+                    ));
+                })
+        );
+
+        // Run the rule after every test task so the check is part of normal test execution.
+        project.getTasks().withType(Test.class).configureEach(test ->
+                test.finalizedBy(project.getTasks().withType(RestrictImports.class))
+        );
+    }
+
+    /**
      * Generates a {@code git.properties} file at the classpath root of every jar so a shipped
      * artifact can be traced back to its exact source commit. Without this, a production jar
      * carries no record of which repo or commit it came from.
@@ -216,21 +214,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     }
 
     /**
-     * Disables the plain {@code jar} task in modules that apply the Spring Boot plugin so
-     * only the executable {@code bootJar} fat jar is produced. By default both tasks run and
-     * leave two artifacts in {@code build/libs} — a thin library jar and the runnable
-     * application jar — and release tooling that globs {@code *.jar} can ship the wrong one.
-     *
-     * <p>The gate fires only when the Spring Boot plugin is applied; libraries and the
-     * platform module continue to produce their plain jar normally.
-     */
-    private void disablePlainJarInBootApps(Project project) {
-        project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
-                project.getTasks().named("jar").configure(task -> task.setEnabled(false))
-        );
-    }
-
-    /**
      * Imports the {@code :platform} project as a Bill of Materials (BOM) into every dependency
      * declaration that contributes to compile, test, or runtime classpaths. A BOM contributes
      * only version constraints — it adds no jars itself — so module build scripts can list
@@ -258,6 +241,21 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
                 dependencies.add("developmentOnly", platform)
+        );
+    }
+
+    /**
+     * Disables the plain {@code jar} task in modules that apply the Spring Boot plugin so
+     * only the executable {@code bootJar} fat jar is produced. By default both tasks run and
+     * leave two artifacts in {@code build/libs} — a thin library jar and the runnable
+     * application jar — and release tooling that globs {@code *.jar} can ship the wrong one.
+     *
+     * <p>The gate fires only when the Spring Boot plugin is applied; libraries and the
+     * platform module continue to produce their plain jar normally.
+     */
+    private void disablePlainJarInBootApps(Project project) {
+        project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
+                project.getTasks().named("jar").configure(task -> task.setEnabled(false))
         );
     }
 }
