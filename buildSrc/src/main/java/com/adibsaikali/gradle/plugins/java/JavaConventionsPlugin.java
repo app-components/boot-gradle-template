@@ -165,16 +165,21 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     /**
      * Wires JaCoCo into every JVM test task in the module. Every test run produces a code
-     * coverage report at {@code build/reports/jacoco/}, and the {@code check} lifecycle
-     * enforces a minimum coverage threshold — builds whose coverage falls below
-     * {@link #MINIMUM_COVERAGE_PERCENT} fail.
+     * coverage report at {@code build/reports/jacoco/} in both HTML (for humans) and XML
+     * (for tooling like SonarQube, Codecov, and GitHub coverage actions), and the
+     * {@code check} lifecycle enforces a minimum coverage threshold — builds whose coverage
+     * falls below {@link #MINIMUM_COVERAGE_PERCENT} fail.
      *
      * <p>The JaCoCo runtime version comes from the Gradle distribution being used, so the
-     * tool version moves in lockstep with Gradle upgrades. Modules that need additional
-     * report formats (XML for Codecov or SonarQube, CSV for spreadsheet tooling) can extend
-     * the {@code jacocoTestReport} task in their own build script.
+     * tool version moves in lockstep with Gradle upgrades.
      */
     private void measureCoverageWithJacoco(Project project) {
+        // Enable XML output alongside the default HTML so CI tools that consume coverage
+        // (SonarQube, Codecov, etc.) can read the report directly without extra config.
+        project.getTasks().withType(JacocoReport.class).configureEach(report ->
+                report.getReports().getXml().getRequired().set(true)
+        );
+
         // Generate the coverage report after every test task so the report is always fresh.
         project.getTasks().withType(Test.class).configureEach(test ->
                 test.finalizedBy(project.getTasks().withType(JacocoReport.class))
