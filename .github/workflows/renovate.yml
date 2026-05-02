@@ -78,3 +78,7 @@ jobs:
         with:
           token: ${{ secrets.RENOVATE_TOKEN }}
           configurationFile: .github/renovate.json
+        env:
+          # Tell Renovate which repository to operate on. Without this it logs
+          # "No repositories found" and exits without doing anything.
+          RENOVATE_REPOSITORIES: ${{ github.repository }}
