@@ -1,9 +1,5 @@
 /*
- * Copyright 2023 Programming Mastery Inc.
- *
- * All Rights Reserved Unauthorized copying of this file, via any medium is strictly prohibited.
- *
- * Proprietary and confidential
+ * Copyright 2023-present the original author or authors.
  */
 package com.adibsaikali.time;
 

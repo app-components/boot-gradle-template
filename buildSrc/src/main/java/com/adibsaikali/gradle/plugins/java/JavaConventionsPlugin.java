@@ -25,14 +25,14 @@ import java.util.List;
 
 public class JavaConventionsPlugin implements Plugin<Project> {
 
-    // Update this header when the shared Java file license text changes.
+    // Generic copyright header in the style used by the Spring Framework. The $YEAR token is
+    // replaced by Spotless with the file's first-stamp year (preserved on subsequent rewrites),
+    // and "-present" extends the range without requiring yearly maintenance. Adjust the wording
+    // here if your project needs a license identifier or a different rights statement; one edit
+    // propagates across the whole repository on the next spotlessApply.
     private static final String JAVA_LICENSE_HEADER = """
             /*
-             * Copyright $YEAR Programming Mastery Inc.
-             *
-             * All Rights Reserved Unauthorized copying of this file, via any medium is strictly prohibited.
-             *
-             * Proprietary and confidential
+             * Copyright $YEAR-present the original author or authors.
              */
             """;
 
