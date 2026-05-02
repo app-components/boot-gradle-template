@@ -72,7 +72,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
         // Add conventions that only matter when optional plugins or dependencies are present.
         configureSpringConventions(project);
-        addPlatformDependencies(project);
+        usePlatformBom(project);
     }
 
     private void configureJavaCompilation(Project project) {
@@ -160,10 +160,9 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     }
 
     private void configureSpringConventions(Project project) {
-        project.getPluginManager().withPlugin("org.springframework.boot", plugin -> {
-            project.getTasks().named("jar").configure(task -> task.setEnabled(false));
-            project.getDependencies().add("developmentOnly", project.getDependencies().platform(project.project(":platform")));
-        });
+        project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
+                project.getTasks().named("jar").configure(task -> task.setEnabled(false))
+        );
 
         project.getPluginManager().withPlugin("org.springframework.boot.aot", plugin ->
                 project.getTasks().named("compileAotJava", JavaCompile.class).configure(task -> {
@@ -176,11 +175,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         );
     }
 
-    /**
-     * Applies shared platform dependencies across the main dependency configurations and
-     * test fixtures when that plugin is present.
-     */
-    private void addPlatformDependencies(Project project) {
+    private void usePlatformBom(Project project) {
         DependencyHandler dependencies = project.getDependencies();
         Dependency platform = dependencies.platform(project.project(":platform"));
 
@@ -190,6 +185,10 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("java-test-fixtures", plugin ->
                 dependencies.add("testFixturesImplementation", platform)
+        );
+
+        project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
+                dependencies.add("developmentOnly", platform)
         );
     }
 }
