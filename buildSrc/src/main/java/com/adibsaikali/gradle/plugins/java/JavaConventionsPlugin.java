@@ -56,7 +56,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         pluginManager.apply(SpotlessPlugin.class);
         pluginManager.apply(GitPropertiesPlugin.class);
 
-        configureCompiler(project);
+        configureJavaCompilation(project);
         banJunitAssertions(project);
         enforceFormattingStandards(project);
 
@@ -69,7 +69,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         addPlatformDependencies(project);
     }
 
-    private void configureCompiler(Project project) {
+    private void configureJavaCompilation(Project project) {
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         java.getToolchain().getLanguageVersion()
                 .set(JavaLanguageVersion.of(JAVA_VERSION));
