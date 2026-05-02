@@ -1,4 +1,4 @@
-package com.adibsaikali.gradle.plugins.maven;
+package build.conventions;
 
 
 import org.gradle.api.Plugin;

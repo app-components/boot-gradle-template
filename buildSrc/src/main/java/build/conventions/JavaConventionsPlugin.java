@@ -1,4 +1,4 @@
-package com.adibsaikali.gradle.plugins.java;
+package build.conventions;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.gradle.spotless.SpotlessPlugin;

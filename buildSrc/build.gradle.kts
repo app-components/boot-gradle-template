@@ -29,11 +29,11 @@ gradlePlugin {
 
     plugins.create("java.conventions") {
         id = name
-        implementationClass = "com.adibsaikali.gradle.plugins.java.JavaConventionsPlugin"
+        implementationClass = "build.conventions.JavaConventionsPlugin"
     }
 
     plugins.create("maven.publish.conventions") {
         id = name
-        implementationClass = "com.adibsaikali.gradle.plugins.maven.MavenConventionsPlugin"
+        implementationClass = "build.conventions.MavenConventionsPlugin"
     }
 }

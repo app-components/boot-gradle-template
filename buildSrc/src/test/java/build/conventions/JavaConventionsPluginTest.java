@@ -1,4 +1,4 @@
-package com.adibsaikali.gradle.plugins.java;
+package build.conventions;
 
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
