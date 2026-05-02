@@ -39,9 +39,10 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     // Update this version when the shared Java toolchain for the build changes.
     private static final int JAVA_VERSION = 25;
 
-    // Update these flags when the shared compiler policy for the build changes.
-    private static final List<String> COMPILER_ARGS = List.of(
-            "-parameters",        // Retain method parameter names in compiled bytecode for reflection.
+    // Strict warning policy applied to every module. Modules may remove individual flags from
+    // their own build script when a transition (e.g. a major dependency upgrade) temporarily
+    // produces too many warnings to fix at once.
+    private static final List<String> WARNING_FLAGS = List.of(
             "-Werror",            // Fail the build when the compiler emits any warning.
             "-Xlint:unchecked",   // Warn about unchecked generic operations and conversions.
             "-Xlint:deprecation", // Warn when code uses deprecated APIs.
@@ -74,6 +75,22 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     }
 
+    /**
+     * Pins the JDK toolchain, language release, source encoding, and compiler flags so every
+     * module compiles identically regardless of the developer's machine. Gradle downloads the
+     * configured JDK on demand, so a build never depends on whatever JDK happens to be
+     * installed locally.
+     *
+     * <p>{@code -parameters} is non-negotiable — Spring, Jackson, and similar frameworks read
+     * parameter names via reflection at runtime, and removing the flag silently breaks code
+     * that relies on parameter binding.
+     *
+     * <p>The strict warning policy ({@code -Werror} plus the {@code -Xlint} categories in
+     * {@link #WARNING_FLAGS}) turns questionable code into build failures rather than warnings
+     * ignored in CI logs. Modules can remove individual warning flags from their own build
+     * script when a transition (e.g. a major dependency upgrade) makes the strict defaults
+     * temporarily painful, without needing to drop the conventions plugin entirely.
+     */
     private void configureJavaCompilationSettings(Project project) {
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         // Use a consistent JDK toolchain so compilation does not depend on the machine running Gradle.
@@ -85,12 +102,23 @@ public class JavaConventionsPlugin implements Plugin<Project> {
             compile.getOptions().getRelease().set(JAVA_VERSION);
             // Read Java source files as UTF-8 instead of relying on the platform default charset.
             compile.getOptions().setEncoding("UTF-8");
-            // Append the shared compiler policy without discarding any arguments already added elsewhere.
             List<String> args = compile.getOptions().getCompilerArgs();
-            args.addAll(COMPILER_ARGS);
+            // -parameters affects emitted bytecode: Spring, Jackson, and similar frameworks read
+            // parameter names via reflection at runtime, so this is non-negotiable.
+            args.add("-parameters");
+            // Strict warning policy. Modules may remove individual flags downstream if needed.
+            args.addAll(WARNING_FLAGS);
         });
     }
 
+    /**
+     * Forbids any test from importing JUnit's assertion API ({@code Assertions}, {@code Assert},
+     * and their static imports). Tests must use AssertJ's {@code assertThat(...)} style instead,
+     * which produces clearer failure messages and reads more fluently when chaining checks.
+     *
+     * <p>The check is wired in as a finalizer on every {@code Test} task, so violations fail
+     * the build during normal test runs rather than waiting to be caught in code review.
+     */
     private void banJunitAssertions(Project project) {
         // Define the restrict-imports rule: ban JUnit assertion imports everywhere and explain why.
         project.getTasks().withType(RestrictImports.class).configureEach(task ->
@@ -112,6 +140,16 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         );
     }
 
+    /**
+     * Wires up Spotless to format Java and SQL sources to a single shared style — Java with
+     * google-java-format and the proprietary license header, SQL with the shared DBeaver
+     * profile. This eliminates style debates and keeps diffs focused on real changes rather
+     * than whitespace.
+     *
+     * <p>Spotless runs as part of the {@code check} task, so any module whose code drifts
+     * from the standard style fails the build. Run {@code ./gradlew spotlessApply} (or the
+     * {@code s} helper script) to fix violations automatically rather than editing by hand.
+     */
     private void enforceFormattingStandards(Project project) {
         SpotlessExtension spotless = project.getExtensions().getByType(SpotlessExtension.class);
 
@@ -137,11 +175,30 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("Spotless conventions configured");
     }
 
+    /**
+     * Selects JUnit Jupiter (JUnit 5) as the test framework for every JVM test suite in the
+     * module, so every module across the repository runs tests on the same stack and tests
+     * written in one module behave identically when copied into another.
+     */
     private void useJUnitJupiter(Project project) {
         var testing = project.getExtensions().getByType(TestingExtension.class);
         testing.getSuites().withType(JvmTestSuite.class, suite -> suite.useJUnitJupiter());
     }
 
+    /**
+     * Generates a {@code git.properties} file at the classpath root of every jar so a shipped
+     * artifact can be traced back to its exact source commit. Without this, a production jar
+     * carries no record of which repo or commit it came from.
+     *
+     * <p>The key set is deliberately minimal: the remote URL identifies the repo, the commit
+     * SHA pins the exact source state, {@code git.commit.id.describe} gives a human-readable
+     * release handle (e.g. {@code v1.2.3-4-gabcdef}) for at-a-glance identification, and
+     * {@code git.dirty} flags whether the working tree had uncommitted changes at build time.
+     * Anything else is recoverable from the repo once the SHA is known.
+     *
+     * <p>Spring Boot Actuator surfaces these values automatically on {@code /actuator/info}
+     * when an app exposes that endpoint.
+     */
     private void addGitPropertiesToJar(Project project) {
         GitPropertiesPluginExtension git = project.getExtensions().getByType(GitPropertiesPluginExtension.class);
         git.setKeys(
@@ -158,12 +215,35 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("GitProperties Plugin configured");
     }
 
+    /**
+     * Disables the plain {@code jar} task in modules that apply the Spring Boot plugin so
+     * only the executable {@code bootJar} fat jar is produced. By default both tasks run and
+     * leave two artifacts in {@code build/libs} — a thin library jar and the runnable
+     * application jar — and release tooling that globs {@code *.jar} can ship the wrong one.
+     *
+     * <p>The gate fires only when the Spring Boot plugin is applied; libraries and the
+     * platform module continue to produce their plain jar normally.
+     */
     private void disablePlainJarInBootApps(Project project) {
         project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
                 project.getTasks().named("jar").configure(task -> task.setEnabled(false))
         );
     }
 
+    /**
+     * Imports the {@code :platform} project as a Bill of Materials (BOM) into every dependency
+     * declaration that contributes to compile, test, or runtime classpaths. A BOM contributes
+     * only version constraints — it adds no jars itself — so module build scripts can list
+     * dependencies without specifying versions.
+     *
+     * <p>Centralizing version management in {@code :platform} prevents version drift across
+     * modules: bumping a Spring Boot version is one change in one file, not a hunt across
+     * every module's build script.
+     *
+     * <p>The {@code testFixturesImplementation} and {@code developmentOnly} additions are
+     * gated on their respective plugins because those declarations only exist when the
+     * corresponding plugin is applied.
+     */
     private void addPlatformBomToClasspaths(Project project) {
         DependencyHandler dependencies = project.getDependencies();
         Dependency platform = dependencies.platform(project.project(":platform"));
