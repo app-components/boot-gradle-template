@@ -70,7 +70,8 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         configureJavaCompilation(project);
         banJunitAssertions(project);
         enforceFormattingStandards(project);
-        configureTests(project);
+        useJUnitJupiter(project);
+        configureTestExecutionLogging(project);
         publishGitMetadata(project);
 
         // Add conventions that only matter when optional plugins or dependencies are present.
@@ -143,13 +144,12 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("Spotless conventions configured");
     }
 
-    /**
-     * Configures JUnit Jupiter as the default test suite and standardizes test logging.
-     */
-    private void configureTests(Project project) {
+    private void useJUnitJupiter(Project project) {
         var testing = project.getExtensions().getByType(TestingExtension.class);
         testing.getSuites().withType(JvmTestSuite.class, suite -> suite.useJUnitJupiter());
+    }
 
+    private void configureTestExecutionLogging(Project project) {
         project.getTasks().withType(Test.class).configureEach(test ->
                 test.testLogging(loggingContainer -> {
                     loggingContainer.setShowStandardStreams(false);
