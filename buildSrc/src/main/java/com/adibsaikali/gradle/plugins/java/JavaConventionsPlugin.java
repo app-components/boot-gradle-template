@@ -26,6 +26,17 @@ import java.util.List;
 
 public class JavaConventionsPlugin implements Plugin<Project> {
 
+    // Update this header when the shared Java file license text changes.
+    private static final String JAVA_LICENSE_HEADER = """
+            /*
+             * Copyright $YEAR Programming Mastery Inc.
+             *
+             * All Rights Reserved Unauthorized copying of this file, via any medium is strictly prohibited.
+             *
+             * Proprietary and confidential
+             */
+            """;
+
     // Update this version when the shared Java toolchain for the build changes.
     private static final int JAVA_VERSION = 25;
 
@@ -42,16 +53,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
             "-Xlint:try",         // Warn about issues in try-with-resources and exception handling structure.
             "-Xlint:varargs");    // Warn about potentially unsafe varargs usage.
 
-    // Update this header when the shared Java file license text changes.
-    private static final String JAVA_LICENSE_HEADER = """
-            /*
-             * Copyright $YEAR Programming Mastery Inc.
-             *
-             * All Rights Reserved Unauthorized copying of this file, via any medium is strictly prohibited.
-             *
-             * Proprietary and confidential
-             */
-            """;
+
 
     @Override
     public void apply(Project project) {
@@ -76,19 +78,25 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         addPlatformDependencies(project);
     }
 
+    // Core Java compilation conventions.
     private void configureJavaCompilation(Project project) {
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
+        // Use a consistent JDK toolchain so compilation does not depend on the machine running Gradle.
         java.getToolchain().getLanguageVersion()
                 .set(JavaLanguageVersion.of(JAVA_VERSION));
 
         project.getTasks().withType(JavaCompile.class, compile -> {
+            // Compile against the configured Java release to align language level, bytecode target, and JDK APIs.
             compile.getOptions().getRelease().set(JAVA_VERSION);
+            // Read Java source files as UTF-8 instead of relying on the platform default charset.
             compile.getOptions().setEncoding("UTF-8");
+            // Append the shared compiler policy without discarding any arguments already added elsewhere.
             List<String> args = compile.getOptions().getCompilerArgs();
             args.addAll(COMPILER_ARGS);
         });
     }
 
+    // Test and formatting policy.
     private void banJunitAssertions(Project project) {
         // Define the restrict-imports rule: ban JUnit assertion imports everywhere and explain why.
         project.getTasks().withType(RestrictImports.class).configureEach(task ->
@@ -179,6 +187,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("GitProperties Plugin configured");
     }
 
+    // Optional conventions that only apply when related plugins are present.
     private void configureSpringConventions(Project project) {
         project.getPluginManager().withPlugin("org.springframework.boot", plugin -> {
             project.getTasks().named("jar").configure(task -> task.setEnabled(false));
