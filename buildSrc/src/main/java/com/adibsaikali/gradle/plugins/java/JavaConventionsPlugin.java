@@ -68,7 +68,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         banJunitAssertions(project);
         enforceFormattingStandards(project);
         useJUnitJupiter(project);
-        publishGitMetadata(project);
+        addGitPropertiesToJar(project);
 
         // Add conventions that only matter when optional plugins or dependencies are present.
         configureSpringConventions(project);
@@ -143,25 +143,14 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         testing.getSuites().withType(JvmTestSuite.class, suite -> suite.useJUnitJupiter());
     }
 
-    private void publishGitMetadata(Project project) {
+    private void addGitPropertiesToJar(Project project) {
         GitPropertiesPluginExtension git = project.getExtensions().getByType(GitPropertiesPluginExtension.class);
         git.setKeys(
                 List.of(
-                        "git.branch",
-                        "git.build.version",
-                        "git.closest.tag.commit.count",
-                        "git.closest.tag.name",
-                        "git.commit.id",
-                        "git.commit.id.abbrev",
-                        "git.commit.id.describe",
-                        "git.commit.message.full",
-                        "git.commit.message.short",
-                        "git.commit.time",
-                        "git.commit.user.email",
-                        "git.commit.user.name",
-                        "git.dirty",
-                        "git.remote.origin.url",
-                        "git.tags"
+                        "git.remote.origin.url",  // Which repo the jar was built from.
+                        "git.commit.id",          // Exact commit SHA — the durable, unambiguous identity of the source state.
+                        "git.commit.id.describe", // Human-readable handle (e.g. v1.2.3-4-gabcdef) so a release can be identified without cloning.
+                        "git.dirty"               // Whether the working tree had uncommitted changes — false means the jar matches the SHA exactly.
                 )
         );
 
