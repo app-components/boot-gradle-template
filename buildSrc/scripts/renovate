@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# preview what renovate would do against the working tree, without touching github.
+# uses .github/renovate.json for configuration. requires node.js for npx.
+# --onboarding=false skips the "Configure Renovate" PR flow that doesn't apply in local mode.
+# the trailing summary lists every PR renovate would open; ignore the "Error updating branch"
+# warnings — those are the local platform's expected limitation, not real failures.
+
+LOG_FILE=$(mktemp -t renovate-dryrun.XXXXXX.log)
+
+LOG_LEVEL=${LOG_LEVEL:-info} npx --yes renovate \
+    --platform=local \
+    --dry-run=full \
+    --onboarding=false \
+    $1 $2 $3 2>&1 | tee "$LOG_FILE"
+
+echo
+echo "=== Updates Renovate would propose (each line = one PR) ==="
+grep -oE 'branch=renovate/[a-zA-Z0-9._-]*' "$LOG_FILE" | sort -u | sed 's|branch=renovate/||'
+echo
+echo "Full log: $LOG_FILE"

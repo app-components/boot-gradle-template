@@ -1,0 +1,80 @@
+# =============================================================================
+# Renovate (self-hosted, runs on GitHub Actions)
+# =============================================================================
+#
+# Why self-hosted instead of the Mend-hosted Renovate GitHub App:
+# This is a template that gets forked into private projects. Mend-hosted Renovate
+# would clone every private fork to Mend's SaaS infrastructure to scan it. Running
+# Renovate ourselves on GitHub-hosted Actions runners keeps the code inside
+# GitHub's boundary — clones happen on ephemeral GitHub runners and never leave.
+#
+# -----------------------------------------------------------------------------
+# One-time setup per fork
+# -----------------------------------------------------------------------------
+# This workflow needs a RENOVATE_TOKEN repository secret to function. Until the
+# secret exists, the workflow runs on schedule but cannot open PRs.
+#
+# To create the secret:
+#   1. Generate a fine-grained Personal Access Token at
+#      GitHub Settings → Developer settings → Personal access tokens → Fine-grained.
+#      Scope the token to this repository with these permissions:
+#        Contents:       Read and write   (push branches and commits)
+#        Pull requests:  Read and write   (open and update PRs)
+#        Issues:         Read and write   (maintain the Dependency Dashboard issue)
+#        Metadata:       Read             (required for any access)
+#   2. In this repo: Settings → Secrets and variables → Actions → New repository secret.
+#        Name:  RENOVATE_TOKEN
+#        Value: (paste the PAT)
+#
+# -----------------------------------------------------------------------------
+# Why we don't use the built-in GITHUB_TOKEN
+# -----------------------------------------------------------------------------
+# Every workflow has access to ${{ secrets.GITHUB_TOKEN }} for free, and with the
+# right permissions block GITHUB_TOKEN can open PRs on its own repository. So why
+# bother with a separate token?
+#
+# GitHub Actions deliberately blocks workflow triggers caused by GITHUB_TOKEN.
+# This is a recursion guard: without it, a workflow that opened a PR could trigger
+# another workflow that opens another PR, in an infinite loop.
+#
+# That rule kills Renovate's value proposition. The whole point of Renovate is
+# "open a PR for an upgrade AND have CI run on it automatically, so the green
+# check confirms the upgrade is safe." If Renovate opened PRs using GITHUB_TOKEN,
+# the existing ci.yml workflow would NOT trigger on those PRs — every Renovate PR
+# would sit unverified until a human manually re-ran CI.
+#
+# Using a PAT (acts as your user) or a self-managed GitHub App installation token
+# sidesteps this. The PR's author is a different actor, the recursion guard
+# doesn't apply, and ci.yml triggers normally on every Renovate PR.
+#
+# -----------------------------------------------------------------------------
+# Local preview
+# -----------------------------------------------------------------------------
+# Run `renovate` (the script in buildSrc/scripts/) to preview what this workflow
+# would propose, without touching GitHub. That's useful for tuning .github/renovate.json
+# before the workflow runs for real.
+#
+# =============================================================================
+
+name: Renovate
+
+on:
+  schedule:
+    # Daily at 01:00 UTC. Adjust to match your timezone or release cadence.
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  renovate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Self-hosted Renovate
+        uses: renovatebot/github-action@v40
+        with:
+          token: ${{ secrets.RENOVATE_TOKEN }}
+          configurationFile: .github/renovate.json

@@ -370,9 +370,21 @@ The backend app tests use Spring Boot Testcontainers support and start PostgreSQ
 
 ## GitHub Workflows
 
-This repo includes two workflows under [`.github/workflows`](.github/workflows):
+This repo includes three workflows under [`.github/workflows`](.github/workflows):
 
 - [ci.yml](.github/workflows/ci.yml)
   Runs `./gradlew test` on pull requests and pushes to `main`.
 - [release.yml](.github/workflows/release.yml)
   Runs on tag push, builds the backend app jar, creates a GitHub release, and attaches the built jar.
+- [renovate.yml](.github/workflows/renovate.yml)
+  Runs Renovate daily to open dependency-update PRs. Self-hosted (executes on GitHub-hosted Actions runners) so private forks don't share source with third-party SaaS.
+
+## Dependency Updates (Renovate)
+
+The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, and the JDK pinned in `.sdkmanrc`. Each detected upgrade becomes a PR labeled by semver bump type, with [ci.yml](.github/workflows/ci.yml) gating each upgrade.
+
+Configuration lives in [.github/renovate.json](.github/renovate.json) (extending Renovate's `config:recommended` preset).
+
+**One-time setup when forking the template:** the Renovate workflow needs a `RENOVATE_TOKEN` repository secret to push branches and open PRs. The header of [.github/workflows/renovate.yml](.github/workflows/renovate.yml) documents the token type, scopes, and why GitHub's built-in `GITHUB_TOKEN` can't be used here.
+
+**Local preview:** run [buildSrc/scripts/renovate](buildSrc/scripts/renovate) (added to `PATH` via direnv as `renovate`) to dry-run Renovate against the current working tree without touching GitHub. The trailing summary lists every PR Renovate would open. Useful for sanity-checking changes to `.github/renovate.json` before the scheduled run picks them up.
