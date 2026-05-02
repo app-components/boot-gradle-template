@@ -69,7 +69,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         useJUnitJupiter(project);
         banJunitAssertions(project);
         addGitPropertiesToJar(project);
-        usePlatformBom(project);
+        addPlatformBomToClasspaths(project);
         disablePlainJarInBootApps(project);
 
     }
@@ -164,7 +164,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         );
     }
 
-    private void usePlatformBom(Project project) {
+    private void addPlatformBomToClasspaths(Project project) {
         DependencyHandler dependencies = project.getDependencies();
         Dependency platform = dependencies.platform(project.project(":platform"));
 
