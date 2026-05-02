@@ -65,14 +65,13 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
         // Configure the shared Java project policies that each module inherits.
         configureJavaCompilation(project);
-        banJunitAssertions(project);
         enforceFormattingStandards(project);
         useJUnitJupiter(project);
+        banJunitAssertions(project);
         addGitPropertiesToJar(project);
-
-        // Add conventions that only matter when optional plugins or dependencies are present.
-        configureSpringConventions(project);
         usePlatformBom(project);
+        disablePlainJarInBootApps(project);
+
     }
 
     private void configureJavaCompilation(Project project) {
@@ -159,19 +158,9 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("GitProperties Plugin configured");
     }
 
-    private void configureSpringConventions(Project project) {
+    private void disablePlainJarInBootApps(Project project) {
         project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
                 project.getTasks().named("jar").configure(task -> task.setEnabled(false))
-        );
-
-        project.getPluginManager().withPlugin("org.springframework.boot.aot", plugin ->
-                project.getTasks().named("compileAotJava", JavaCompile.class).configure(task -> {
-                    task.getOptions().getCompilerArgs().addAll(List.of(
-                            "-Xlint:unchecked",
-                            "-Xlint:deprecation"
-                    ));
-                    task.getOptions().setWarnings(false);
-                })
         );
     }
 
