@@ -7,9 +7,6 @@ repositories {
     mavenCentral()
 }
 
-group = "com.programmingmastery.conventions"
-version = "1.0.0"
-
 dependencies {
     implementation("com.diffplug.spotless:spotless-plugin-gradle:8.4.0" )
     implementation("com.gorylenko.gradle-git-properties:gradle-git-properties:2.5.7")
