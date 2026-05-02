@@ -1,5 +1,7 @@
 package com.adibsaikali.gradle.plugins.java;
 
+import de.skuzzle.restrictimports.gradle.RestrictImports;
+import de.skuzzle.restrictimports.gradle.RestrictImportsPlugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.dsl.DependencyHandler;
@@ -30,9 +32,11 @@ class JavaConventions {
     public void apply(Project project) {
         project.getPluginManager().apply(JavaLibraryPlugin.class);
         project.getPluginManager().apply(JvmTestSuitePlugin.class);
+        project.getPluginManager().apply(RestrictImportsPlugin.class);
         applyCompilerConventions(project);
         applyJarConventions(project);
         applyTestConventions(project);
+        applyRestrictImportsConventions(project);
         applyAotCompileConventions(project);
         applyPlatforms(project);
     }
@@ -113,6 +117,26 @@ class JavaConventions {
                 loggingContainer.setShowStackTraces(true);
                 loggingContainer.setExceptionFormat(TestExceptionFormat.FULL);
             });
+        });
+    }
+
+    /**
+     * Configures restrict-imports to ban JUnit assertion imports in favor of AssertJ and
+     * ensures the checks run after test execution.
+     */
+    private void applyRestrictImportsConventions(Project project) {
+        project.getTasks().withType(Test.class).configureEach(test ->
+                test.finalizedBy(project.getTasks().withType(RestrictImports.class))
+        );
+
+        project.getTasks().withType(RestrictImports.class).configureEach(task -> {
+            task.getReason().set("Use assertj instead");
+            task.getBannedImports().set(List.of(
+                    "org.junit.jupiter.api.Assertions",
+                    "static org.junit.jupiter.api.Assertions.*",
+                    "static org.junit.Assert.*",
+                    "org.junit.Assert"
+            ));
         });
     }
 
