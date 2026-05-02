@@ -17,7 +17,6 @@ import org.gradle.api.plugins.JvmTestSuitePlugin;
 import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.api.tasks.testing.logging.TestExceptionFormat;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.base.TestingExtension;
 
@@ -53,8 +52,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
             "-Xlint:try",         // Warn about issues in try-with-resources and exception handling structure.
             "-Xlint:varargs");    // Warn about potentially unsafe varargs usage.
 
-
-
     @Override
     public void apply(Project project) {
         var pluginManager = project.getPluginManager();
@@ -71,7 +68,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         banJunitAssertions(project);
         enforceFormattingStandards(project);
         useJUnitJupiter(project);
-        configureTestExecutionLogging(project);
         publishGitMetadata(project);
 
         // Add conventions that only matter when optional plugins or dependencies are present.
@@ -79,7 +75,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         addPlatformDependencies(project);
     }
 
-    // Core Java compilation conventions.
     private void configureJavaCompilation(Project project) {
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         // Use a consistent JDK toolchain so compilation does not depend on the machine running Gradle.
@@ -97,7 +92,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         });
     }
 
-    // Test and formatting policy.
     private void banJunitAssertions(Project project) {
         // Define the restrict-imports rule: ban JUnit assertion imports everywhere and explain why.
         project.getTasks().withType(RestrictImports.class).configureEach(task ->
@@ -149,17 +143,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         testing.getSuites().withType(JvmTestSuite.class, suite -> suite.useJUnitJupiter());
     }
 
-    private void configureTestExecutionLogging(Project project) {
-        project.getTasks().withType(Test.class).configureEach(test ->
-                test.testLogging(loggingContainer -> {
-                    loggingContainer.setShowStandardStreams(false);
-                    loggingContainer.setShowCauses(true);
-                    loggingContainer.setShowStackTraces(true);
-                    loggingContainer.setExceptionFormat(TestExceptionFormat.FULL);
-                })
-        );
-    }
-
     private void publishGitMetadata(Project project) {
         GitPropertiesPluginExtension git = project.getExtensions().getByType(GitPropertiesPluginExtension.class);
         git.setKeys(
@@ -187,7 +170,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("GitProperties Plugin configured");
     }
 
-    // Optional conventions that only apply when related plugins are present.
     private void configureSpringConventions(Project project) {
         project.getPluginManager().withPlugin("org.springframework.boot", plugin -> {
             project.getTasks().named("jar").configure(task -> task.setEnabled(false));
