@@ -73,6 +73,57 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Pre-flight: fail fast if RENOVATE_TOKEN is missing or under-scoped.
+      # Without this, the workflow runs Renovate for ~10 minutes and only
+      # discovers a permission problem when the final push is rejected.
+      - name: Validate RENOVATE_TOKEN permissions
+        env:
+          GH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          # 1. Token authenticates.
+          if ! user=$(gh api user --jq .login 2>/dev/null); then
+              echo "::error::RENOVATE_TOKEN is missing or invalid. See the workflow header for setup instructions."
+              exit 1
+          fi
+          echo "Token identity: $user"
+
+          # 2. Read access to this repository (Metadata:read, included by default
+          #    on any token scoped to this repo).
+          if ! gh api "repos/$REPO" --jq .full_name >/dev/null 2>&1; then
+              echo "::error::Token cannot read $REPO. The token must be scoped to (or include) this repository."
+              exit 1
+          fi
+          echo "Read access to $REPO: OK"
+
+          # 3. Branch create+delete (proves Contents:read-and-write).
+          #    This is the same operation Renovate does for every PR; if it fails
+          #    here, Renovate will fail with the same error after a long scan.
+          test_branch="renovate-permission-check-${GITHUB_RUN_ID}"
+          sha=$(gh api "repos/$REPO/git/refs/heads/main" --jq .object.sha)
+
+          if ! gh api "repos/$REPO/git/refs" \
+                  -f "ref=refs/heads/$test_branch" \
+                  -f "sha=$sha" >/dev/null 2>&1; then
+              echo "::error::Token cannot create branches on $REPO."
+              echo "::error::Required permission: Contents: Read and write."
+              echo "::error::For org-owned repos, the token must also be scoped to the org (resource owner = org name when creating a fine-grained PAT)."
+              exit 1
+          fi
+
+          gh api -X DELETE "repos/$REPO/git/refs/heads/$test_branch" >/dev/null 2>&1 || \
+              echo "::warning::Created test branch '$test_branch' but failed to delete it. Remove manually."
+          echo "Branch create+delete on $REPO: OK"
+
+          # Permissions NOT pre-flight tested (would require leaving real PRs/issues/commits behind):
+          #   Pull requests: write — Renovate will surface a clear error if missing
+          #   Issues: write        — needed for the Dependency Dashboard issue
+          #   Workflows: write     — needed to update .github/workflows/*.yml; Renovate logs
+          #                          "Workflows update rejection - aborting branch" if missing
+          echo "::notice::Pre-flight passed for Contents:write. PR/Issues/Workflows write permissions are not tested here — Renovate logs clearly if any is missing."
+
       - name: Self-hosted Renovate
         uses: renovatebot/github-action@v46.1.12
         with:
