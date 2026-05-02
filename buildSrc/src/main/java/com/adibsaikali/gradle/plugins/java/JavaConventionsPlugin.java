@@ -20,7 +20,6 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.base.TestingExtension;
 import org.gradle.testing.jacoco.plugins.JacocoPlugin;
-import org.gradle.testing.jacoco.plugins.JacocoPluginExtension;
 import org.gradle.testing.jacoco.tasks.JacocoReport;
 
 import java.nio.charset.StandardCharsets;
@@ -39,10 +38,6 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     // Update this version when the shared Java toolchain for the build changes.
     private static final int JAVA_VERSION = 25;
-
-    // Update this version when bumping the shared JaCoCo runtime so coverage reports stay
-    // comparable across modules.
-    private static final String JACOCO_VERSION = "0.8.13";
 
     // Strict warning policy applied to every module. Modules may remove individual flags from
     // their own build script when a transition (e.g. a major dependency upgrade) temporarily
@@ -165,18 +160,13 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     /**
      * Wires JaCoCo into every JVM test task in the module so each test run produces a code
-     * coverage report at {@code build/reports/jacoco/}. Modules that need additional report
-     * formats (XML for Codecov or SonarQube, CSV for spreadsheet tooling) can extend the
-     * {@code jacocoTestReport} task in their own build script.
-     *
-     * <p>The JaCoCo runtime version is pinned in {@link #JACOCO_VERSION} so every module
-     * reports coverage with the same tool version, which keeps numbers comparable across
-     * modules and reproducible across machines.
+     * coverage report at {@code build/reports/jacoco/}. The JaCoCo runtime version comes from
+     * the Gradle distribution being used, so the tool version moves in lockstep with Gradle
+     * upgrades. Modules that need additional report formats (XML for Codecov or SonarQube,
+     * CSV for spreadsheet tooling) can extend the {@code jacocoTestReport} task in their own
+     * build script.
      */
     private void measureCoverageWithJacoco(Project project) {
-        var jacoco = project.getExtensions().getByType(JacocoPluginExtension.class);
-        jacoco.setToolVersion(JACOCO_VERSION);
-
         // Generate the coverage report after every test task so the report is always fresh.
         project.getTasks().withType(Test.class).configureEach(test ->
                 test.finalizedBy(project.getTasks().withType(JacocoReport.class))
