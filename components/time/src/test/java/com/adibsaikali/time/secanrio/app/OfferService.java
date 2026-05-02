@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.time.secanrio.app;
 
 import com.adibsaikali.time.TimeService;

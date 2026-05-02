@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.time;
 
 import static org.assertj.core.api.Assertions.assertThat;

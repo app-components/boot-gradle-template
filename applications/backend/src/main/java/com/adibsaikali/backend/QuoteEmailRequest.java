@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 public record QuoteEmailRequest(String email) {}

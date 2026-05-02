@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 import java.util.List;

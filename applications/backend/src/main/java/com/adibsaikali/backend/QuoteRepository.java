@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 import org.springframework.data.jpa.repository.JpaRepository;

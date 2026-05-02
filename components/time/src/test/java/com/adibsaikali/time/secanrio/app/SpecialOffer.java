@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.time.secanrio.app;
 
 import java.time.LocalDateTime;

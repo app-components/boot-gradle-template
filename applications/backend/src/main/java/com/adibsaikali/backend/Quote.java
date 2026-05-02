@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 import jakarta.persistence.Column;

@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 import ch.martinelli.oss.testcontainers.mailpit.MailpitContainer;

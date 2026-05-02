@@ -22,11 +22,7 @@ import org.gradle.jvm.tasks.Jar;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.base.TestingExtension;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.List;
 
 public class JavaConventionsPlugin implements Plugin<Project> {
@@ -46,6 +42,17 @@ public class JavaConventionsPlugin implements Plugin<Project> {
             "-Xlint:this-escape", // Warn when constructors leak this before subclass initialization completes.
             "-Xlint:try",         // Warn about issues in try-with-resources and exception handling structure.
             "-Xlint:varargs");    // Warn about potentially unsafe varargs usage.
+
+    // Update this header when the shared Java file license text changes.
+    private static final String JAVA_LICENSE_HEADER = """
+            /*
+             * Copyright $YEAR Programming Mastery Inc.
+             *
+             * All Rights Reserved Unauthorized copying of this file, via any medium is strictly prohibited.
+             *
+             * Proprietary and confidential
+             */
+            """;
 
     @Override
     public void apply(Project project) {
@@ -106,31 +113,26 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     private void enforceFormattingStandards(Project project) {
         SpotlessExtension spotless = project.getExtensions().getByType(SpotlessExtension.class);
 
+        // Apply shared Spotless defaults across all configured formats.
         spotless.setEncoding(StandardCharsets.UTF_8);
         spotless.setLineEndings(LineEnding.UNIX);
         spotless.setEnforceCheck(true);
 
-        configureJavaFormatting(spotless);
-        configureSqlFormatting(spotless);
-
-        project.getLogger().info("Spotless conventions configured");
-    }
-
-    private void configureJavaFormatting(SpotlessExtension spotless) {
+        // Format Java sources with google-java-format and the shared license header.
         spotless.java(java -> {
             java.googleJavaFormat();
             java.removeUnusedImports();
-            java.licenseHeader(readResourceFile("spotless/template.license.java"));
+            java.licenseHeader(JAVA_LICENSE_HEADER);
             java.targetExclude("build/generated/**");
         });
-    }
 
-    private void configureSqlFormatting(SpotlessExtension spotless) {
+        // Format SQL sources with the shared DBeaver configuration.
         spotless.sql(sql -> {
             sql.target("**/*.sql");
-            String config = readResourceFile("spotless/dbeaver.properties");
-            sql.dbeaver().configFile(createTmpFile(config));
+            sql.dbeaver().configFile(project.getRootProject().file("buildSrc/spotless/dbeaver.properties"));
         });
+
+        project.getLogger().info("Spotless conventions configured");
     }
 
     /**
@@ -219,24 +221,5 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getPluginManager().withPlugin("java-test-fixtures", plugin ->
                 dependencies.add("testFixturesImplementation", platform)
         );
-    }
-
-    private File createTmpFile(String content) {
-        try {
-            var file = File.createTempFile("dbeaver", ".properties");
-            Files.writeString(file.toPath(), content);
-            return file;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String readResourceFile(String path) {
-        try {
-            InputStream is = this.getClass().getClassLoader().getResourceAsStream(path);
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 }

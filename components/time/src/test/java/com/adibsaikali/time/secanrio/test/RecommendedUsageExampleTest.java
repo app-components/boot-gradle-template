@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.time.secanrio.test;
 
 import com.adibsaikali.time.MutableTimeService;

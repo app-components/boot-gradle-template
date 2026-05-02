@@ -5,7 +5,6 @@
  *
  * Proprietary and confidential
  */
-
 package com.adibsaikali.backend;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
