@@ -11,9 +11,15 @@ and consumed in-process — never published, no Maven coordinates.
 
 Configures the things every JVM module in the repository should agree on:
 JDK toolchain, compilation flags, formatting, the test framework, code
-coverage, jar provenance, and the shared dependency BOM. See the Javadoc
-on each private method in `JavaConventionsPlugin.java` for what each rule
-does and why.
+coverage, jar provenance, the shared dependency BOM, and a dependency
+update report. See the Javadoc on each private method in
+`JavaConventionsPlugin.java` for what each rule does and why.
+
+Useful tasks added to every Java module:
+
+- `./gradlew <module>:dependencyUpdates` — lists every available newer
+  version of every declared dependency. Read the report and judge for
+  yourself which upgrades are safe to adopt.
 
 ### Assumptions
 

@@ -3,6 +3,8 @@ package build.conventions;
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.gradle.spotless.SpotlessPlugin;
 import com.diffplug.spotless.LineEnding;
+import com.github.benmanes.gradle.versions.VersionsPlugin;
+import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask;
 import com.gorylenko.GitPropertiesPlugin;
 import com.gorylenko.GitPropertiesPluginExtension;
 import de.skuzzle.restrictimports.gradle.RestrictImports;
@@ -69,6 +71,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         pluginManager.apply(SpotlessPlugin.class);
         pluginManager.apply(GitPropertiesPlugin.class);
         pluginManager.apply(JacocoPlugin.class);
+        pluginManager.apply(VersionsPlugin.class);
 
         // Configure the shared Java project policies that each module inherits.
         configureJavaCompilationSettings(project);
@@ -78,6 +81,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         banJunitAssertions(project);
         addGitPropertiesToJar(project);
         addPlatformBomToClasspaths(project);
+        reportDependencyUpdates(project);
         disablePlainJarInBootApps(project);
 
     }
@@ -294,6 +298,23 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("org.springframework.boot", plugin ->
                 dependencies.add("developmentOnly", platform)
+        );
+    }
+
+    /**
+     * Adds the {@code dependencyUpdates} task to every module via the gradle-versions plugin.
+     * The task reports every available newer version of every declared dependency, leaving
+     * the human reading the report to judge what's safe to adopt.
+     *
+     * <p>The task is declared incompatible with Gradle's configuration cache because the
+     * plugin captures {@code Configuration} objects in its lambdas, which the cache cannot
+     * serialize. Without this declaration, strict configuration-cache modes would fail the
+     * build instead of falling back to non-cached execution.
+     */
+    private void reportDependencyUpdates(Project project) {
+        project.getTasks().withType(DependencyUpdatesTask.class).configureEach(task ->
+                task.notCompatibleWithConfigurationCache(
+                        "gradle-versions-plugin is not configuration-cache compatible")
         );
     }
 

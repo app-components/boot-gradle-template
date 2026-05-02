@@ -11,6 +11,7 @@ dependencies {
     implementation("com.diffplug.spotless:spotless-plugin-gradle:8.4.0" )
     implementation("com.gorylenko.gradle-git-properties:gradle-git-properties:2.5.7")
     implementation("de.skuzzle.restrictimports:restrict-imports-gradle-plugin:3.0.0")
+    implementation("com.github.ben-manes:gradle-versions-plugin:0.54.0")
 
     testImplementation(gradleTestKit())
     testImplementation(platform("org.junit:junit-bom:6.0.3"))

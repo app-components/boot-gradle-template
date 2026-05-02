@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# shortcut to running gradle dependencyUpdates across every module.
+# --no-configuration-cache silences the upstream plugin's known cache-incompatibility
+# noise — the task itself can't benefit from the cache anyway, so the flag costs nothing.
+gradlew dependencyUpdates --no-configuration-cache $1 $2 $3
