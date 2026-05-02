@@ -18,7 +18,6 @@ import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat;
-import org.gradle.jvm.tasks.Jar;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.testing.base.TestingExtension;
 
@@ -57,21 +56,22 @@ public class JavaConventionsPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         var pluginManager = project.getPluginManager();
+
+        // Apply the Gradle plugins that the shared Java conventions depend on.
         pluginManager.apply(JavaLibraryPlugin.class);
         pluginManager.apply(JvmTestSuitePlugin.class);
         pluginManager.apply(RestrictImportsPlugin.class);
         pluginManager.apply(SpotlessPlugin.class);
         pluginManager.apply(GitPropertiesPlugin.class);
 
+        // Configure the shared Java project policies that each module inherits.
         configureJavaCompilation(project);
         banJunitAssertions(project);
         enforceFormattingStandards(project);
-
         configureTests(project);
-
         publishGitMetadata(project);
-        useProjectPathForJarNames(project);
-        
+
+        // Add conventions that only matter when optional plugins or dependencies are present.
         configureSpringConventions(project);
         addPlatformDependencies(project);
     }
@@ -179,19 +179,9 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         project.getLogger().info("GitProperties Plugin configured");
     }
 
-    /**
-     * Sets the archive base name to match the project's Gradle path
-     * (e.g., {@code :my-service} becomes {@code my-service.jar}).
-     */
-    private void useProjectPathForJarNames(Project project) {
-        project.getTasks().withType(Jar.class).configureEach(jar ->
-                jar.getArchiveBaseName().set(project.getPath().replace(":", "-").substring(1))
-        );
-    }
-
     private void configureSpringConventions(Project project) {
         project.getPluginManager().withPlugin("org.springframework.boot", plugin -> {
-            project.getTasks().named("jar", Jar.class).configure(jar -> jar.setEnabled(false));
+            project.getTasks().named("jar").configure(task -> task.setEnabled(false));
             project.getDependencies().add("developmentOnly", project.getDependencies().platform(project.project(":platform")));
         });
 
