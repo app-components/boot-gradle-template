@@ -64,7 +64,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
         pluginManager.apply(GitPropertiesPlugin.class);
 
         // Configure the shared Java project policies that each module inherits.
-        configureJavaCompilation(project);
+        configureJavaCompilationSettings(project);
         enforceFormattingStandards(project);
         useJUnitJupiter(project);
         banJunitAssertions(project);
@@ -74,7 +74,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
 
     }
 
-    private void configureJavaCompilation(Project project) {
+    private void configureJavaCompilationSettings(Project project) {
         var java = project.getExtensions().getByType(JavaPluginExtension.class);
         // Use a consistent JDK toolchain so compilation does not depend on the machine running Gradle.
         java.getToolchain().getLanguageVersion()
