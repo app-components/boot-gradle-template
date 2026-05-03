@@ -45,7 +45,7 @@ jobs:
       # install. cache-dependency-path is required because the lockfile lives
       # in the frontend subdir, not the repo root.
       - name: Set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
           node-version-file: applications/frontend/.nvmrc
           cache: npm
