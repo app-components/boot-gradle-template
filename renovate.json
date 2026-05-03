@@ -5,5 +5,12 @@
     "config:recommended"
   ],
   "prHourlyLimit": 0,
-  "prConcurrentLimit": 10
+  "prConcurrentLimit": 10,
+  "packageRules": [
+    {
+      "description": "Major bumps land on the Dependency Dashboard as a checkbox instead of opening a PR automatically. Tick the box, run Renovate, and it opens the PR — keeps the review queue free of breaking-change PRs you didn't ask for.",
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
 }
