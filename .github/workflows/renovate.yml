@@ -11,27 +11,41 @@
 # -----------------------------------------------------------------------------
 # One-time setup per fork
 # -----------------------------------------------------------------------------
-# This workflow needs a RENOVATE_TOKEN repository secret to function. Until the
-# secret exists, the workflow runs on schedule but cannot open PRs.
+# This workflow authenticates as a GitHub App. Until the App is installed and the
+# two secrets below exist, the workflow runs on schedule but cannot open PRs.
 #
-# To create the secret:
-#   1. Generate a fine-grained Personal Access Token at
-#      GitHub Settings → Developer settings → Personal access tokens → Fine-grained.
-#      Scope the token to this repository with these permissions:
+# Why a GitHub App (not a PAT):
+#   - PATs are owned by an individual account. If this repo lives in an org and
+#     the PAT owner leaves or rotates the token, Renovate silently breaks.
+#   - A GitHub App is owned by the org, has scoped per-install permissions, and
+#     mints short-lived installation tokens at runtime — no long-lived secret
+#     with broad access is stored in the repo.
+#
+# To set this up:
+#   1. Create a GitHub App (org-owned) at
+#        Org Settings → Developer settings → GitHub Apps → New GitHub App.
+#      Required repository permissions:
 #        Contents:       Read and write   (push branches and commits)
 #        Pull requests:  Read and write   (open and update PRs)
 #        Issues:         Read and write   (maintain the Dependency Dashboard issue)
-#        Metadata:       Read             (required for any access)
-#   2. In this repo: Settings → Secrets and variables → Actions → New repository secret.
-#        Name:  RENOVATE_TOKEN
-#        Value: (paste the PAT)
+#        Workflows:      Read and write   (so Renovate can update files in .github/workflows/)
+#        Metadata:       Read             (granted automatically)
+#      No webhook or callback URL is needed — Renovate polls.
+#   2. Generate a private key for the App (Settings → "Generate a private key")
+#      and download the PEM file.
+#   3. Install the App on this repository
+#      (App page → Install App → choose org → select this repo).
+#   4. In this repo: Settings → Secrets and variables → Actions → New repository secret.
+#        RENOVATE_APP_ID         = the App's numeric App ID (App settings page)
+#        RENOVATE_APP_PRIVATE_KEY = the entire contents of the downloaded PEM,
+#                                   including the BEGIN/END lines
 #
 # -----------------------------------------------------------------------------
 # Why we don't use the built-in GITHUB_TOKEN
 # -----------------------------------------------------------------------------
 # Every workflow has access to ${{ secrets.GITHUB_TOKEN }} for free, and with the
 # right permissions block GITHUB_TOKEN can open PRs on its own repository. So why
-# bother with a separate token?
+# bother with a separate identity?
 #
 # GitHub Actions deliberately blocks workflow triggers caused by GITHUB_TOKEN.
 # This is a recursion guard: without it, a workflow that opened a PR could trigger
@@ -43,8 +57,7 @@
 # the existing ci.yml workflow would NOT trigger on those PRs — every Renovate PR
 # would sit unverified until a human manually re-ran CI.
 #
-# Using a PAT (acts as your user) or a self-managed GitHub App installation token
-# sidesteps this. The PR's author is a different actor, the recursion guard
+# A GitHub App installation token has a different actor, the recursion guard
 # doesn't apply, and ci.yml triggers normally on every Renovate PR.
 #
 # -----------------------------------------------------------------------------
@@ -73,61 +86,40 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Pre-flight: fail fast if RENOVATE_TOKEN is missing or under-scoped.
-      # Without this, the workflow runs Renovate for ~10 minutes and only
-      # discovers a permission problem when the final push is rejected.
-      - name: Validate RENOVATE_TOKEN permissions
+      # Mint a short-lived installation token from the GitHub App credentials.
+      # This token is scoped to whichever repos the App is installed on and
+      # expires after ~1 hour — the secrets in the repo are the App ID and
+      # private key, not a long-lived token.
+      - name: Generate GitHub App installation token
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RENOVATE_APP_ID }}
+          private-key: ${{ secrets.RENOVATE_APP_PRIVATE_KEY }}
+
+      # Pre-flight: confirm the installation token can reach this repo.
+      # If the App isn't installed (or isn't installed on this repo), the
+      # token mint above succeeds but every API call returns 404. A single
+      # repo read here surfaces that within a second instead of after a
+      # ~10-minute Renovate scan. Per-permission checks are intentionally
+      # skipped — those are configured on the App itself, and Renovate's
+      # own logs name the missing permission clearly when it hits one.
+      - name: Validate GitHub App token can access the repo
         env:
-          GH_TOKEN: ${{ secrets.RENOVATE_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-
-          # 1. Token authenticates.
-          if ! user=$(gh api user --jq .login 2>/dev/null); then
-              echo "::error::RENOVATE_TOKEN is missing or invalid. See the workflow header for setup instructions."
-              exit 1
-          fi
-          echo "Token identity: $user"
-
-          # 2. Read access to this repository (Metadata:read, included by default
-          #    on any token scoped to this repo).
           if ! gh api "repos/$REPO" --jq .full_name >/dev/null 2>&1; then
-              echo "::error::Token cannot read $REPO. The token must be scoped to (or include) this repository."
+              echo "::error::App installation token cannot read $REPO. Make sure the GitHub App is installed on this repository — see the workflow header."
               exit 1
           fi
           echo "Read access to $REPO: OK"
 
-          # 3. Branch create+delete (proves Contents:read-and-write).
-          #    This is the same operation Renovate does for every PR; if it fails
-          #    here, Renovate will fail with the same error after a long scan.
-          test_branch="renovate-permission-check-${GITHUB_RUN_ID}"
-          sha=$(gh api "repos/$REPO/git/refs/heads/main" --jq .object.sha)
-
-          if ! gh api "repos/$REPO/git/refs" \
-                  -f "ref=refs/heads/$test_branch" \
-                  -f "sha=$sha" >/dev/null 2>&1; then
-              echo "::error::Token cannot create branches on $REPO."
-              echo "::error::Required permission: Contents: Read and write."
-              echo "::error::For org-owned repos, the token must also be scoped to the org (resource owner = org name when creating a fine-grained PAT)."
-              exit 1
-          fi
-
-          gh api -X DELETE "repos/$REPO/git/refs/heads/$test_branch" >/dev/null 2>&1 || \
-              echo "::warning::Created test branch '$test_branch' but failed to delete it. Remove manually."
-          echo "Branch create+delete on $REPO: OK"
-
-          # Permissions NOT pre-flight tested (would require leaving real PRs/issues/commits behind):
-          #   Pull requests: write — Renovate will surface a clear error if missing
-          #   Issues: write        — needed for the Dependency Dashboard issue
-          #   Workflows: write     — needed to update .github/workflows/*.yml; Renovate logs
-          #                          "Workflows update rejection - aborting branch" if missing
-          echo "::notice::Pre-flight passed for Contents:write. PR/Issues/Workflows write permissions are not tested here — Renovate logs clearly if any is missing."
-
       - name: Self-hosted Renovate
         uses: renovatebot/github-action@v46.1.12
         with:
-          token: ${{ secrets.RENOVATE_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           configurationFile: .github/renovate.json
         env:
           # Tell Renovate which repository to operate on. Without this it logs
