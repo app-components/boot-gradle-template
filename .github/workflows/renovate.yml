@@ -54,11 +54,11 @@
 # That rule kills Renovate's value proposition. The whole point of Renovate is
 # "open a PR for an upgrade AND have CI run on it automatically, so the green
 # check confirms the upgrade is safe." If Renovate opened PRs using GITHUB_TOKEN,
-# the existing ci.yml workflow would NOT trigger on those PRs — every Renovate PR
-# would sit unverified until a human manually re-ran CI.
+# the existing build.yml workflow would NOT trigger on those PRs — every Renovate PR
+# would sit unverified until a human manually re-ran the build.
 #
 # A GitHub App installation token has a different actor, the recursion guard
-# doesn't apply, and ci.yml triggers normally on every Renovate PR.
+# doesn't apply, and build.yml triggers normally on every Renovate PR.
 #
 # -----------------------------------------------------------------------------
 # Local preview

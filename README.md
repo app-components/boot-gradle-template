@@ -372,7 +372,7 @@ The backend app tests use Spring Boot Testcontainers support and start PostgreSQ
 
 This repo includes three workflows under [`.github/workflows`](.github/workflows):
 
-- [ci.yml](.github/workflows/ci.yml)
+- [build.yml](.github/workflows/build.yml)
   Runs `./gradlew test` on pull requests and pushes to `main`.
 - [release.yml](.github/workflows/release.yml)
   Runs on tag push, builds the backend app jar, creates a GitHub release, and attaches the built jar.
@@ -381,7 +381,7 @@ This repo includes three workflows under [`.github/workflows`](.github/workflows
 
 ## Dependency Updates (Renovate)
 
-The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, and the JDK pinned in `.sdkmanrc`. Each detected upgrade becomes a PR labeled by semver bump type, with [ci.yml](.github/workflows/ci.yml) gating each upgrade.
+The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, and the JDK pinned in `.sdkmanrc`. Each detected upgrade becomes a PR labeled by semver bump type, with [build.yml](.github/workflows/build.yml) gating each upgrade.
 
 Configuration lives in [renovate.json](renovate.json) at the repo root (extending Renovate's `config:recommended` preset). It sits at the root rather than under `.github/` because the config is a Renovate concern; the GitHub Actions workflow is just the transport that runs it.
 
