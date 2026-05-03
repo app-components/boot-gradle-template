@@ -9,7 +9,7 @@
 springBoot = "4.0.5"
 springCloud = "2025.1.1"
 threeTenExtra = "1.8.0"
-equalsVerifier = "4.4.1"
+equalsVerifier = "4.5"
 greenMail = "2.1.8"
 mailpitTestcontainers = "1.3.0"
 
