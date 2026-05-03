@@ -11,7 +11,7 @@
 #   ../../gradlew bootJar
 #   docker build -t backend:latest .
 
-ARG BASE_IMAGE=eclipse-temurin:25-jre
+ARG BASE_IMAGE=eclipse-temurin:25.0.3_9-jre
 
 FROM ${BASE_IMAGE} AS builder
 WORKDIR /application
