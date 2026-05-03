@@ -38,3 +38,24 @@ jobs:
       # and use Docker, which is pre-installed on the ubuntu-latest runner.
       - name: Run full Gradle build
         run: ./gradlew build
+
+      # Node version comes from applications/frontend/.nvmrc, the same file
+      # local nvm/fnm/volta read — single source of truth for "which Node".
+      # cache: npm keys node_modules off the lockfile so warm runs skip the
+      # install. cache-dependency-path is required because the lockfile lives
+      # in the frontend subdir, not the repo root.
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: applications/frontend/.nvmrc
+          cache: npm
+          cache-dependency-path: applications/frontend/package-lock.json
+
+      # `npm ci` installs from the lockfile exactly (fails on drift). `npm run
+      # build` runs `vue-tsc -b && vite build` per the frontend's package.json,
+      # which type-checks the Vue/TS code and produces the production bundle.
+      - name: Build frontend
+        working-directory: applications/frontend
+        run: |
+          npm ci
+          npm run build
