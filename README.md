@@ -383,8 +383,10 @@ This repo includes three workflows under [`.github/workflows`](.github/workflows
 
 The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, and the JDK pinned in `.sdkmanrc`. Each detected upgrade becomes a PR labeled by semver bump type, with [ci.yml](.github/workflows/ci.yml) gating each upgrade.
 
-Configuration lives in [.github/renovate.json](.github/renovate.json) (extending Renovate's `config:recommended` preset).
+Configuration lives in [renovate.json](renovate.json) at the repo root (extending Renovate's `config:recommended` preset). It sits at the root rather than under `.github/` because the config is a Renovate concern; the GitHub Actions workflow is just the transport that runs it.
 
-**One-time setup when forking the template:** the Renovate workflow needs a `RENOVATE_TOKEN` repository secret to push branches and open PRs. The header of [.github/workflows/renovate.yml](.github/workflows/renovate.yml) documents the token type, scopes, and why GitHub's built-in `GITHUB_TOKEN` can't be used here.
+**One-time setup when forking the template:** the Renovate workflow authenticates as a GitHub App and needs `RENOVATE_APP_ID` + `RENOVATE_APP_PRIVATE_KEY` repository secrets to mint short-lived installation tokens at runtime. The header of [.github/workflows/renovate.yml](.github/workflows/renovate.yml) documents the App permissions and why GitHub's built-in `GITHUB_TOKEN` can't be used here.
 
-**Local preview:** run [buildSrc/scripts/renovate](buildSrc/scripts/renovate) (added to `PATH` via direnv as `renovate`) to dry-run Renovate against the current working tree without touching GitHub. The trailing summary lists every PR Renovate would open. Useful for sanity-checking changes to `.github/renovate.json` before the scheduled run picks them up.
+**Local preview:** run [buildSrc/scripts/renovate](buildSrc/scripts/renovate) (added to `PATH` via direnv as `renovate`) to dry-run Renovate against the current working tree without touching GitHub. The trailing summary lists every PR Renovate would open. Useful for sanity-checking changes to `renovate.json` before the scheduled run picks them up.
+
+**Manual trigger:** run [buildSrc/scripts/run-renovate](buildSrc/scripts/run-renovate) (on `PATH` as `run-renovate`) to dispatch the workflow remotely and tail its logs. Use this after ticking a Dependency Dashboard checkbox — Renovate only reads checkbox state at the start of a run.

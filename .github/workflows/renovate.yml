@@ -64,7 +64,7 @@
 # Local preview
 # -----------------------------------------------------------------------------
 # Run `renovate` (the script in buildSrc/scripts/) to preview what this workflow
-# would propose, without touching GitHub. That's useful for tuning .github/renovate.json
+# would propose, without touching GitHub. That's useful for tuning renovate.json
 # before the workflow runs for real.
 #
 # =============================================================================
@@ -120,7 +120,7 @@ jobs:
         uses: renovatebot/github-action@v46.1.12
         with:
           token: ${{ steps.app-token.outputs.token }}
-          configurationFile: .github/renovate.json
+          configurationFile: renovate.json
         env:
           # Tell Renovate which repository to operate on. Without this it logs
           # "No repositories found" and exits without doing anything.

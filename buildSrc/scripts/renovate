@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # preview what renovate would do against the working tree, without touching github.
-# uses .github/renovate.json for configuration. requires node.js for npx.
+# uses renovate.json at the repo root for configuration. requires node.js for npx.
 # --onboarding=false skips the "Configure Renovate" PR flow that doesn't apply in local mode.
 # the trailing summary lists every PR renovate would open; ignore the "Error updating branch"
 # warnings — those are the local platform's expected limitation, not real failures.
