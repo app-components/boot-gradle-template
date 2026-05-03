@@ -3,5 +3,7 @@
   "description": "Renovate config for this template. Extends the recommended preset; see https://docs.renovatebot.com/configuration-options/ for tuning options (auto-merge policies, schedules, grouping rules).",
   "extends": [
     "config:recommended"
-  ]
+  ],
+  "prHourlyLimit": 0,
+  "prConcurrentLimit": 10
 }
