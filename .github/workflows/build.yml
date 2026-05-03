@@ -24,7 +24,13 @@ jobs:
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        # cache-provider: basic forces the MIT-licensed cache implementation
+        # (backed by actions/cache). v6 ships an enhanced "gradle-actions-caching"
+        # library by default that is proprietary and may become paid for
+        # commercial use; "basic" keeps this workflow 100% OSS.
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-provider: basic
 
       # `./gradlew build` runs `check` (test + spotlessCheck + restrictImports
       # + every other check-task contributor) plus `assemble` (compile + jar
