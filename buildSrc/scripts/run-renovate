@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# dispatch the remote renovate workflow on github and tail its logs.
+# useful after editing the dependency dashboard issue — renovate only reads
+# checkbox state at the start of a run, so a click does nothing until the
+# next dispatch (or the daily 01:00 utc scheduled run).
+# requires gh cli authenticated against the repo.
+
+set -Eeuo pipefail
+
+command -v gh >/dev/null 2>&1 || { echo "required command 'gh' not found" >&2; exit 1; }
+
+repo_root() {
+    cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd
+}
+
+cd "$(repo_root)"
+
+repo=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+echo "dispatching renovate.yml on $repo (ref=main)"
+gh workflow run renovate.yml --ref main
+
+# wait for github to register the dispatch, then grab the most recent
+# workflow_dispatch run. filtering by --event avoids picking up a scheduled
+# run that happened to fire moments before this script.
+sleep 5
+run_id=$(gh run list \
+    --workflow=renovate.yml \
+    --branch=main \
+    --event=workflow_dispatch \
+    --limit=1 \
+    --json databaseId \
+    --jq '.[0].databaseId')
+
+echo "watching run $run_id (ctrl-c to detach; the run keeps running on github)"
+gh run watch "$run_id" --exit-status
