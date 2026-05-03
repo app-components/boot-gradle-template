@@ -84,7 +84,7 @@ jobs:
   renovate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       # Mint a short-lived installation token from the GitHub App credentials.
       # This token is scoped to whichever repos the App is installed on and
