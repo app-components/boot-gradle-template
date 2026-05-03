@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,5 +26,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Compile and test
-        run: ./gradlew test
+      # `./gradlew build` runs `check` (test + spotlessCheck + restrictImports
+      # + every other check-task contributor) plus `assemble` (compile + jar
+      # everything). The Testcontainers integration tests run as part of `test`
+      # and use Docker, which is pre-installed on the ubuntu-latest runner.
+      - name: Run full Gradle build
+        run: ./gradlew build
