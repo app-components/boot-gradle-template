@@ -24,7 +24,7 @@ jobs:
           java-version: "25"
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       # `./gradlew build` runs `check` (test + spotlessCheck + restrictImports
       # + every other check-task contributor) plus `assemble` (compile + jar
