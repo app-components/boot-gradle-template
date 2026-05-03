@@ -166,7 +166,7 @@ services:
     restart: unless-stopped
 
   pgadmin:
-    image: "${PGADMIN_IMAGE:-dpage/pgadmin4:9.13}"
+    image: "${PGADMIN_IMAGE:-dpage/pgadmin4:9.14}"
     depends_on:
       postgres:
         condition: service_healthy
