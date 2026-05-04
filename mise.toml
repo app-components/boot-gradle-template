@@ -1,0 +1,24 @@
+[settings]
+experimental = true
+
+[tools]
+java = "temurin-25"
+node = "24"
+
+[env]
+_.path = [
+    "buildSrc/scripts",
+    "buildSrc/scripts/gradle",
+    "."
+]
+
+[hooks]
+enter = "mise current"
+
+# Start the Renovate workflow on GitHub (does not wait for it to finish).
+# Useful after checking a box on the dependency dashboard issue — Renovate
+# only re-reads the dashboard at the start of a run, so a checkbox click
+# does nothing until the next run (or the daily 01:00 UTC scheduled run).
+[tasks.renovate]
+description = "Start the Renovate workflow on GitHub"
+run = "gh workflow run renovate.yml --ref main"
