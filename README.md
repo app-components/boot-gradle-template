@@ -21,6 +21,13 @@ This repository is a working Spring Boot template with:
 - [buildSrc](buildSrc)
   Gradle build logic and small local helper scripts.
 
+## Prerequisites
+
+- [mise](https://mise.jdx.dev/) installed and active in your shell. mise reads [mise.toml](mise.toml) to provide the JDK, Node, and PATH additions used throughout this repo.
+- Docker (or Docker Desktop) for the local infrastructure stack.
+
+After cloning, run `mise install` once from the repo root to fetch the pinned tool versions. See [docs/mise.md](docs/mise.md) for what mise manages and why.
+
 ## Quick Start
 
 Start the shared local infrastructure:
