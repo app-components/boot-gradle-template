@@ -39,15 +39,18 @@ jobs:
       - name: Run full Gradle build
         run: ./gradlew build
 
-      # Node version comes from applications/frontend/.nvmrc, the same file
-      # local nvm/fnm/volta read — single source of truth for "which Node".
+      # Node version comes from applications/frontend/package.json's engines.node
+      # field. The same field is enforced locally by npm via .npmrc's
+      # engine-strict=true, so CI and local development read from the same value.
+      # The repo also pins node in mise.toml for the local-tooling activation
+      # path; both should match.
       # cache: npm keys node_modules off the lockfile so warm runs skip the
       # install. cache-dependency-path is required because the lockfile lives
       # in the frontend subdir, not the repo root.
       - name: Set up Node
         uses: actions/setup-node@v6
         with:
-          node-version-file: applications/frontend/.nvmrc
+          node-version-file: applications/frontend/package.json
           cache: npm
           cache-dependency-path: applications/frontend/package-lock.json
 

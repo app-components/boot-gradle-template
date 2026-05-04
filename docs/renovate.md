@@ -217,7 +217,7 @@ body) before merging.
 Three ways:
 
 1. **Wait** for the daily 01:00 UTC scheduled run.
-2. **`run-renovate`** from anywhere in the repo (`direnv` adds
+2. **`run-renovate`** from anywhere in the repo (mise adds
    `buildSrc/scripts/` to your PATH). Dispatches the workflow on
    GitHub and tails its logs.
 3. **GitHub UI**: Actions tab → Renovate → Run workflow.
@@ -229,7 +229,7 @@ open Renovate PRs (so the rebases happen now, not at 01:00 UTC).
 ### Previewing locally without touching GitHub
 
 The [`renovate`](../buildSrc/scripts/renovate) script (also on PATH
-via direnv) runs Renovate against your working tree in
+via mise) runs Renovate against your working tree in
 `--dry-run=full --platform=local` mode. It prints what Renovate
 *would* propose without opening any PRs or modifying any files.
 

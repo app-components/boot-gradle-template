@@ -142,7 +142,7 @@ Traffic flow during local development:
 
 The repo also includes short Gradle helper commands under [buildSrc/scripts/gradle](buildSrc/scripts/gradle).
 
-If direnv is active, [.envrc](.envrc) adds this directory to `PATH`, so these commands can be run directly from the repo.
+When mise is active in your shell, [mise.toml](mise.toml) adds this directory to `PATH`, so these commands can be run directly from the repo.
 
 Available commands:
 
@@ -383,13 +383,13 @@ The architectural decisions baked into these workflows — runner pinning, actio
 
 ## Dependency Updates (Renovate)
 
-The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, the JDK pinned in `.sdkmanrc`, and the frontend's npm dependencies. Each detected upgrade becomes a PR gated by [build.yml](.github/workflows/build.yml).
+The Renovate workflow scans Gradle dependencies (`libs.versions.toml`, `buildSrc` plugins, `gradle-wrapper.properties`), GitHub Actions versions, Docker images in `compose.yaml`, the JDK and Node versions pinned in [`mise.toml`](mise.toml), and the frontend's npm dependencies. Each detected upgrade becomes a PR gated by [build.yml](.github/workflows/build.yml).
 
 Configuration lives in [renovate.json](renovate.json) at the repo root. Major-version bumps are gated behind a Dependency Dashboard checkbox; patches and minors flow as PRs automatically.
 
 **Forking the template** requires creating a GitHub App and configuring two repository secrets (`RENOVATE_APP_ID`, `RENOVATE_APP_PRIVATE_KEY`). The full setup walkthrough is in [docs/renovate.md](docs/renovate.md), with a short version inline at the top of [.github/workflows/renovate.yml](.github/workflows/renovate.yml).
 
-**Local helpers** (on `PATH` via direnv):
+**Local helpers** (on `PATH` via mise):
 - [`renovate`](buildSrc/scripts/renovate) — dry-run Renovate against your working tree without touching GitHub. Useful for tuning [renovate.json](renovate.json) before committing.
 - [`run-renovate`](buildSrc/scripts/run-renovate) — dispatch the workflow remotely and tail logs. Use this after ticking a Dependency Dashboard checkbox.
 

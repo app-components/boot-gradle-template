@@ -155,23 +155,25 @@ The `ci-success` aggregator pattern matters once you're using
 required status checks in branch protection — it gives you one
 stable check name that depends on all the others.
 
-### `actions/setup-node` reads `applications/frontend/.nvmrc`
+### `actions/setup-node` reads `applications/frontend/package.json`
 
 The Node version isn't pinned in `build.yml`. Instead, the
 workflow uses `node-version-file:`:
 
 ```yaml
-- uses: actions/setup-node@v5
+- uses: actions/setup-node@v6
   with:
-    node-version-file: applications/frontend/.nvmrc
+    node-version-file: applications/frontend/package.json
     cache: npm
     cache-dependency-path: applications/frontend/package-lock.json
 ```
 
-This reads the file at `applications/frontend/.nvmrc` (which
-contains `24`) and installs that Node version. The same file is
-read by local `nvm`, `fnm`, and `volta` — single source of truth
-for "which Node," shared between dev and CI.
+This reads the `engines.node` field of `package.json` (currently
+`"24"`) and installs that Node version. The same field is enforced
+locally by npm via `.npmrc`'s `engine-strict=true`, so CI and local
+development read from the same value. The repo also pins Node in
+`mise.toml`'s `[tools]` for the local-tooling activation path —
+both should match.
 
 ### `permissions: contents: read` at the workflow level
 
