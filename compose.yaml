@@ -111,7 +111,7 @@ services:
   # Edge Proxy
   # ==========================================================================
   traefik:
-    image: "${TRAEFIK_IMAGE:-traefik:v3.6}"
+    image: "${TRAEFIK_IMAGE:-traefik:v3.7}"
     command:
       - "--entrypoints.web.address=:8080"
       - "--providers.file.filename=/etc/traefik/dynamic.yml"
