@@ -128,7 +128,7 @@ services:
   # Local Messaging Services
   # ==========================================================================
   mailpit:
-    image: "${MAILPIT_IMAGE:-axllent/mailpit:v1.29}"
+    image: "${MAILPIT_IMAGE:-axllent/mailpit:v1.30}"
     ports:
       - "${MAILPIT_WEB_PORT:-8025}:8025"
       - "${MAILPIT_SMTP_PORT:-1025}:1025"
