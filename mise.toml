@@ -4,6 +4,7 @@ experimental = true
 [tools]
 java = "temurin-25"
 node = "24"
+oras = "1"
 
 [env]
 _.path = [
@@ -22,3 +23,85 @@ enter = "mise current"
 [tasks.renovate]
 description = "Start the Renovate workflow on GitHub"
 run = "gh workflow run renovate.yml --ref main"
+
+[tasks.login]
+description = "Login to GHCR via oras using gh's token (spike #41)"
+run = "gh auth token | oras login ghcr.io -u $(gh api user --jq .login) --password-stdin"
+
+[tasks.push]
+description = "Push the backend boot jar to GHCR as an OCI artifact (spike #41)"
+run = """
+set -euo pipefail
+LIBS_DIR=applications/backend/build/libs
+JAR_PATH=$(ls "$LIBS_DIR"/backend-*.jar)
+JAR_FILE=$(basename "$JAR_PATH")
+VERSION="${JAR_FILE#backend-}"
+VERSION="${VERSION%.jar}"
+REVISION=$(git rev-parse HEAD)
+SOURCE=https://github.com/app-components/boot-gradle-template
+
+cd "$LIBS_DIR"
+oras push \
+  --artifact-type application/vnd.app-components.bootjar.v1 \
+  --annotation "org.opencontainers.image.source=$SOURCE" \
+  --annotation "org.opencontainers.image.version=$VERSION" \
+  --annotation "org.opencontainers.image.revision=$REVISION" \
+  --annotation "org.opencontainers.image.description=Spring Boot fat jar for the boot-gradle-template backend" \
+  ghcr.io/app-components/boot-gradle-template/backend-jar:dev \
+  "$JAR_FILE:application/java-archive"
+"""
+
+[tasks.attach]
+description = "Attach a hello.txt referrer to backend-jar:dev — tests GHCR Referrers API (spike #41)"
+run = """
+set -euo pipefail
+TMP=$(mktemp -d)
+echo "hello" > "$TMP/hello.txt"
+cd "$TMP"
+oras attach \
+  --artifact-type application/vnd.app-components.note.v1 \
+  ghcr.io/app-components/boot-gradle-template/backend-jar:dev \
+  "hello.txt:text/plain"
+cd - >/dev/null
+rm -rf "$TMP"
+
+echo
+echo "=== referrers of backend-jar:dev ==="
+oras discover --format tree ghcr.io/app-components/boot-gradle-template/backend-jar:dev
+"""
+
+[tasks.pull]
+description = "Pull the backend-jar OCI artifact and extract it into ./tmp (spike #41)"
+run = """
+set -euo pipefail
+rm -rf tmp
+mkdir -p tmp
+oras pull --output tmp ghcr.io/app-components/boot-gradle-template/backend-jar:dev
+echo
+echo "=== contents of ./tmp ==="
+ls -la tmp
+"""
+
+[tasks.inspect]
+description = "Inspect the pushed backend-jar OCI artifact: tags, manifest, config (spike #41)"
+run = """
+set -euo pipefail
+REF=ghcr.io/app-components/boot-gradle-template/backend-jar:dev
+REPO=ghcr.io/app-components/boot-gradle-template/backend-jar
+
+echo "=== tags in $REPO ==="
+oras repo tags "$REPO"
+
+echo
+echo "=== manifest (oras manifest fetch --pretty $REF) ==="
+oras manifest fetch --pretty "$REF"
+
+echo
+echo "=== config blob ==="
+CONFIG_DIGEST=$(oras manifest fetch "$REF" | jq -r .config.digest)
+oras blob fetch --output - "$REPO@$CONFIG_DIGEST" | jq .
+
+echo
+echo "=== referrers (signatures, attestations, etc.) ==="
+oras discover --format tree "$REF"
+"""
