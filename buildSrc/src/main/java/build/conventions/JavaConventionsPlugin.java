@@ -286,7 +286,7 @@ public class JavaConventionsPlugin implements Plugin<Project> {
      */
     private void addPlatformBomToClasspaths(Project project) {
         DependencyHandler dependencies = project.getDependencies();
-        Dependency platform = dependencies.platform(project.project(":platform"));
+        Dependency platform = dependencies.platform(dependencies.project(":platform"));
 
         dependencies.add("implementation", platform);
         dependencies.add("annotationProcessor", platform);
