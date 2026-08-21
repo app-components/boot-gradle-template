@@ -11,6 +11,12 @@
       "description": "Major bumps land on the Dependency Dashboard as a checkbox instead of opening a PR automatically. Tick the box, run Renovate, and it opens the PR — keeps the review queue free of breaking-change PRs you didn't ask for.",
       "matchUpdateTypes": ["major"],
       "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Keep the JDK in mise.toml as a major-only selector (temurin-25 = latest 25.x). config:recommended pulls in workarounds:javaLTSVersions, which forces an exact-match regex versioning onto the java-version datasource; that turns `25` into a pin and opens a PR for every Temurin patch release. Restoring semver-partial makes `25` a range again, so only a major bump (the next LTS) is proposed — and it lands on the dashboard like every other major.",
+      "matchManagers": ["mise"],
+      "matchDepNames": ["java"],
+      "versioning": "semver-partial"
     }
   ]
 }

@@ -78,8 +78,6 @@ Turn the template's demonstration code into a conscious keep, replace, or remove
       `platform` BOM pattern as the template's dependency guidance.
 - [ ] Review `.gitignore`: activate the optional language sections the project needs and delete
       the ones it never will.
-- [ ] Review : activate the optional language sections the project needs and delete
-      the ones it never will.
 - [ ] Run the verification loop and resolve every failure.
 
 ### Phase 5: Rewrite the documentation

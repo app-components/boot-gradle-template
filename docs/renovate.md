@@ -94,6 +94,40 @@ PR. The intent is to keep the review queue free of breaking-change
 PRs that demand real decisions — those should be intentional, not
 background noise.
 
+### The JDK in `mise.toml` tracks the latest 25.x, not a pin
+
+[mise.toml](../mise.toml) says `java = "temurin-25"`, matching CI
+(`java-version: "25"`) and the backend Dockerfile
+(`eclipse-temurin:25-jre`): every layer says "latest 25", so
+developers, CI, and the runtime image stay on the same line without
+a pin to chase. Renovate's mise manager understands this and treats
+`25` as a range — a PR only when a new major appears.
+
+`config:recommended` undermines that through the bundled
+`workarounds:javaLTSVersions` preset. It exists for Docker tags: it
+limits Java to LTS majors (8/11/17/21/25) and swaps in an
+exact-match regex versioning so tags like `21.0.11_10-jre` sort
+correctly. It carves out rolling Docker tags (`25-jre`) but not
+mise short versions, so the regex also lands on `temurin-25`, `25`
+stops being a range, and Renovate opens a "patch" PR rewriting it
+to `temurin-25.0.4+101.0.LTS` on every Temurin release. We restore
+the intended behavior for that one dependency:
+
+```json
+{
+  "matchManagers": ["mise"],
+  "matchDepNames": ["java"],
+  "versioning": "semver-partial"
+}
+```
+
+The LTS `allowedVersions` filter from the preset still applies, so
+the next proposal is the next LTS major, which the rule above
+routes to the dashboard for approval. To verify, run the local
+`renovate` dry-run script with `LOG_LEVEL=debug`: the `java`
+dependency should show `"versioning": "semver-partial"` and
+`"updates": []`.
+
 ### PR limits
 
 ```json
