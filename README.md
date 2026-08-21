@@ -10,6 +10,34 @@ This repository is a working Spring Boot template with:
 - a local Docker packaging flow for the backend sample application
 - GitHub Actions workflows for CI and tagged releases
 
+## Starting a New Project from This Template
+
+To create a new project from this repository:
+
+1. Create your copy on GitHub — fork this repository, or clone it and push to a fresh remote if
+   you do not want the template's history.
+2. Run `mise install` from the repo root, then confirm everything works before changing anything:
+   `./gradlew build`, then `npm ci && npm run build` in [applications/frontend](applications/frontend).
+3. Customize the repository's identity. The one-time bootstrap note in
+   [work/todo/customize-starter](work/todo/customize-starter/overview.md) holds the full plan and
+   marks the repository as still being in template state; a coding agent executes it when you ask
+   it to customize this repository. The short manual checklist:
+   - `rootProject.name` in [settings.gradle.kts](settings.gradle.kts)
+   - `group` in [build.gradle.kts](build.gradle.kts)
+   - the Java package root under [applications/backend](applications/backend) and
+     [components/time](components/time)
+   - the license header in
+     [JavaConventionsPlugin](buildSrc/src/main/java/build/conventions/JavaConventionsPlugin.java),
+     followed by `./gradlew spotlessApply` to restamp every source file
+   - the frontend name in [applications/frontend/package.json](applications/frontend/package.json)
+4. Set up dependency updates for the new repository — the Renovate workflow needs a GitHub App and
+   two repository secrets, described in [docs/renovate.md](docs/renovate.md).
+5. Decide what to do with the sample quote and mail functionality: keep it as a working reference,
+   or replace it with your first real feature. The bootstrap note walks through this decision too.
+
+Delete the customize-starter note when customization is complete; planned and in-flight work lives
+as notes under [work](work/README.md).
+
 ## Repository Layout
 
 - [applications](applications)
@@ -20,6 +48,8 @@ This repository is a working Spring Boot template with:
   Shared dependency platform for the build.
 - [buildSrc](buildSrc)
   Gradle build logic and small local helper scripts.
+- [work](work)
+  Lightweight, temporary notes for possible, intended, or parked work. See [work/README.md](work/README.md).
 
 ## Prerequisites
 
