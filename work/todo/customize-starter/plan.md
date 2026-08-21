@@ -76,6 +76,10 @@ Turn the template's demonstration code into a conscious keep, replace, or remove
 - [ ] Apply the decisions, adjusting `compose.yaml` services the project no longer needs (for
       example Mailpit when mail is dropped) while retaining the version-catalog aliases and
       `platform` BOM pattern as the template's dependency guidance.
+- [ ] Review `.gitignore`: activate the optional language sections the project needs and delete
+      the ones it never will.
+- [ ] Review : activate the optional language sections the project needs and delete
+      the ones it never will.
 - [ ] Run the verification loop and resolve every failure.
 
 ### Phase 5: Rewrite the documentation
