@@ -45,11 +45,12 @@
 #   • The active rules at the top are starter defaults for common OS and
 #     editor noise, IDE state, and developer-tooling local state. Review them
 #     during customization and remove or revise rules that do not fit.
-#   • Language-specific rules follow as OPTIONAL sections whose lines are
-#     commented out, so they are inert until activated. To activate a
-#     section, remove the leading '# ' from every line below its banner —
-#     "uncomment the Java section" is enough for a coding agent. Delete
-#     sections the project will never use.
+#   • The Java/Gradle and JavaScript/TypeScript sections below are ACTIVE —
+#     they are this template's fixed stack. Python, Go, and Rust remain
+#     OPTIONAL sections whose lines are commented out and inert until
+#     activated. To activate a section, remove the leading '# ' from every
+#     line below its banner — "uncomment the Python section" is enough for
+#     a coding agent. Delete sections the project will never use.
 #   • Activate and delete optional sections only as whole sections. Each
 #     is self-contained, so a '!' rescue rule is never separated from the
 #     rule it rescues.
@@ -110,6 +111,7 @@ $RECYCLE.BIN/
 
 ### Logs and diagnostics ###
 *.log
+logs/
 nohup.out
 
 ### Archives — committing one is usually a mistake; negate a specific
@@ -133,6 +135,7 @@ nohup.out
 ### JetBrains (IntelliJ IDEA, GoLand, WebStorm, ...) ###
 # JetBrains recommends committing .idea selectively; this template ignores
 # it wholesale to avoid per-user churn and leaked data-source credentials.
+# Share run configurations through the committed .run/ directory instead.
 .idea/
 *.iws
 *.iml
@@ -153,14 +156,18 @@ bin/
 !**/src/**/bin/
 
 ### VS Code ###
-# Must be .vscode/* (not .vscode/) — git cannot re-include files inside an
-# excluded directory, so the negations below only work with this form.
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-!.vscode/*.code-snippets
+# Must be **/.vscode/* (not .vscode/) — git cannot re-include files inside
+# an excluded directory, and the ** form applies the same policy to every
+# application's .vscode directory, not just the repo root's.
+**/.vscode/*
+!**/.vscode/settings.json
+!**/.vscode/tasks.json
+!**/.vscode/launch.json
+!**/.vscode/extensions.json
+!**/.vscode/mcp.json
+!**/.vscode/*.code-snippets
+# Local History extension noise
+**/.history/
 *.vsix
 
 # ═════════════════════════════════════════════════════════════════════
@@ -177,7 +184,7 @@ mise.*.local.toml
 
 ### AI coding agents — session/local state; shared instruction files
 ### (AGENTS.md, CLAUDE.md, .cursor/rules, ...) are committed ###
-.claude/*.local.json
+**/.claude/*.local.json
 CLAUDE.local.md
 .aider*
 
@@ -189,7 +196,7 @@ docker-compose.override.yml
 docker-compose.override.yaml
 
 # ═════════════════════════════════════════════════════════════════════
-#  Java / JVM (Gradle, Maven, Kotlin, packaging, crash dumps)
+#  Java / JVM (Gradle, Kotlin, packaging, crash dumps)
 # ═════════════════════════════════════════════════════════════════════
 
 ### Compiled output ###
@@ -222,49 +229,35 @@ build/
 ### Kotlin 2.0+ Gradle plugin project data (kotlinlang.org: do not commit) ###
 .kotlin/
 
-### Maven ###
-# target/ is unanchored; when this section is active alongside the Rust
-# section, it also covers Cargo's target/ directories.
-target/
-!**/src/**/target/
-# Maven's wrapper defaults to script-only downloads, but the jar-type
-# wrapper stays committable for networks that block the download.
-!.mvn/wrapper/maven-wrapper.jar
-dependency-reduced-pom.xml
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-buildNumber.properties
-.mvn/timing.properties
-
 # ═════════════════════════════════════════════════════════════════════
-#  JavaScript / frontend (npm, Vite, Vue, Playwright)
+#  JavaScript / TypeScript (npm, Vue, Vite, Playwright)
+#  Commit package-lock.json.
 # ═════════════════════════════════════════════════════════════════════
 
-### Dependencies ###
+### Dependencies and npm ###
 node_modules/
+npm-debug.log*
 
-### Bundler output (Vite) ###
+### Vite / Vue build output ###
 dist/
-# Rescue real source dirs named "dist" anywhere under a src/ tree.
-!**/src/**/dist/
-
-### Test artifacts (Vitest coverage, Playwright) ###
-# The Playwright Java client writes its artifacts under the JVM build
-# directory instead; these cover the JS test runner.
-coverage/
-/test-results/
-/playwright-report/
-/blob-report/
-playwright/.cache/
-
-### Tool caches ###
+dist-ssr/
 .vite/
+!**/src/**/dist/
+!**/src/**/dist-ssr/
+# auto-imports.d.ts and components.d.ts (unplugin-generated) are deliberately
+# not ignored — commit them so CI type-checking sees the same declarations.
+
+### Testing and coverage ###
+coverage/
+test-results/
+playwright-report/
+blob-report/
+**/playwright/.cache/
+
+### TypeScript and lint caches ###
+*.tsbuildinfo
 .eslintcache
 .stylelintcache
-*.tsbuildinfo
 
 # ═════════════════════════════════════════════════════════════════════
 #  OPTIONAL: Python (uv, poetry, pdm, pytest, mypy, ruff, Jupyter)
@@ -346,8 +339,7 @@ playwright/.cache/
 # ═════════════════════════════════════════════════════════════════════
 
 # # Cargo builds into target/ at the workspace root. Anchored so it cannot
-# # interfere with other languages' rules; when the Java section is also
-# # active, its unanchored target/ covers nested crates too.
+# # interfere with other languages' rules.
 # /target/
 # **/*.rs.bk
 # *.pdb
