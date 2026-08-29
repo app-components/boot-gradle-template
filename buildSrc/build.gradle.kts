@@ -10,7 +10,7 @@ repositories {
 dependencies {
     implementation("com.diffplug.spotless:spotless-plugin-gradle:8.10.0" )
     implementation("com.gorylenko.gradle-git-properties:gradle-git-properties:4.0.1")
-    implementation("de.skuzzle.restrictimports:restrict-imports-gradle-plugin:3.0.1")
+    implementation("de.skuzzle.restrictimports:restrict-imports-gradle-plugin:3.0.2")
     implementation("com.github.ben-manes:gradle-versions-plugin:0.54.0")
 
     testImplementation(gradleTestKit())
